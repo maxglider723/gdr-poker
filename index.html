@@ -206,7 +206,7 @@ input,textarea,select{font-size:16px}
 .seat.hero .nm{font-size:14px}
 .seat.hero .meta{justify-content:flex-start}
 .seat.hero .stk{font-size:15px}
-.seat.hero .tag{position:absolute;left:50%;top:100%;transform:translate(-50%,-10px);margin:0}
+.seat.hero .hero-col{display:flex;flex-direction:column;align-items:center;min-width:0}
 .seat.hero.active .plate{border-color:#4cff8e}
 /* Compact seats when the table area is very short (set by layoutTable) */
 #tableWrap.tight .seat .hole.mini,#tableWrap.tight .seat .hole.empty{height:8px;margin-bottom:-4px;overflow:hidden}
@@ -344,6 +344,9 @@ input,textarea,select{font-size:16px}
 #liveExportPanel .export-label{margin:4px 0 0;font-size:13px}
 #liveExportPanel .export-json{flex:1 1 auto;min-height:120px;max-height:none;resize:none}
 @media (min-width:900px){ #liveExportPanel{inset:5vh 10vw;border-radius:16px;border:1px solid #2c3f35;box-shadow:0 20px 60px rgba(0,0,0,.7)} }
+/* Final hand: End Game takes the Next hand button's place */
+.abtn.nexthand.endgame{background:#6b4a0e;border-color:var(--gold);color:#fff}
+.abtn.nexthand.endgame:hover{background:#7d5812}
 
 </style>
 </head>
@@ -1629,6 +1632,7 @@ if(typeof window!=='undefined') window.GdrSession=api;
 if(typeof window==='undefined') return;
 var E=PokerEngine, S=GdrSession, W=GdrWidget, fmt=E.fmt;
 var KEY='gdrHtmlPlayer.v1';
+var finalPending=false; // final hand shown with an End Game button before the results screen
 var sessionResult=null, lastPublic=null, errTimer=null, logOpen=false, autoExported=false, autoExportAttempted=false;
 var dirHandle=null, dirHandleReady=null;
 var FOLDER_DB='gdrHtmlPlayer.fs', FOLDER_STORE='handles', FOLDER_IDB_KEY='saveDir';
@@ -1768,6 +1772,7 @@ function save(){
     var copy=JSON.parse(JSON.stringify({
       autoExported:!!autoExported,
       autoExportAttempted:!!autoExportAttempted,
+      finalPending:!!finalPending,
       state:{
         schema:s.schema, session:s.session, format:s.format, handLimit:s.handLimit,
         initialButton:s.initialButton, names:s.names, totalCents:s.totalCents,
@@ -1804,7 +1809,36 @@ function rememberSessionNumber(n){
 }
 function nextSessionNumber(){ return lastSessionNumber()+1; }
 
+// Shared counter: ./session.json on the site ({"next_session":64,...}) lets the iPhone and the PC agree
+// on the next GDR number. Read-only, no token: bumped from the box by tools/bump_session_counter.sh.
+// The next number is max(local counter + 1, remote next_session); offline or slow -> local only.
+var REMOTE_SESSION_URL='./session.json', REMOTE_SESSION_TIMEOUT_MS=3500;
+var remoteNextSession=null, remoteSessionStatus='pending', sessNumEdited=false;
+function fetchRemoteSession(){
+  if(!/^https?:$/.test(location.protocol)||typeof fetch!=='function'){ remoteSessionStatus='unavailable'; return Promise.resolve(null); }
+  var ctl=(typeof AbortController==='function')?new AbortController():null, timer=null;
+  var timeout=new Promise(function(_,rej){ timer=setTimeout(function(){ if(ctl) try{ctl.abort();}catch(e){} rej(new Error('timeout')); }, REMOTE_SESSION_TIMEOUT_MS); });
+  var req=fetch(REMOTE_SESSION_URL+'?t='+Date.now(), {cache:'no-store', signal:ctl?ctl.signal:undefined})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+  return Promise.race([req, timeout]).then(function(o){
+    clearTimeout(timer);
+    var n=o&&parseInt(o.next_session,10);
+    if(!Number.isInteger(n)||n<1||n>1000000) throw new Error('bad session.json');
+    remoteNextSession=n; remoteSessionStatus='ok';
+    rememberSessionNumber(n-1); // fold into the local counter so it also holds offline later
+    applySessionDefault();
+    return n;
+  }).catch(function(e){ clearTimeout(timer); remoteSessionStatus='offline'; return null; });
+}
+// Refresh the pre-filled number on the start screen unless Max typed his own.
+function applySessionDefault(){
+  var el=$('sessNum'); if(!el||sessNumEdited) return;
+  var n=nextSessionNumber(), v=parseInt(el.value,10);
+  if(!Number.isInteger(v)||v<n) el.value=String(n);
+}
+
 function startNew(){
+  applySessionDefault();
   if(!$('sessNum').value) $('sessNum').value=String(nextSessionNumber());
   var n=parseInt($('sessNum').value,10);
   if($('sessNum').value && (!Number.isInteger(n) || n<1)){ flashErr('Session number must be a positive integer.'); return; }
@@ -1835,7 +1869,8 @@ function resumeSaved(){
   if(!saved.state.complete) resetExportUi();
   // Recompute public in case
   lastPublic=lastPublic||{current:S.publicState(saved.state.engine), widget:saved.state.complete?null:W.widget(saved.state.engine), complete:!!saved.state.complete, narration:[]};
-  if(saved.state.complete) enterEnd();
+  if(saved.state.complete && saved.finalPending) enterFinalHand();
+  else if(saved.state.complete) enterEnd();
   else enterPlay();
 }
 
@@ -1843,7 +1878,24 @@ function enterPlay(){
   show('startScreen',false); show('endScreen',false); show('playScreen',true);
   render();
 }
+function enterFinalHand(){
+  finalPending=true;
+  closeLiveExport(); setExportStatus('');
+  show('startScreen',false); show('endScreen',false); show('playScreen',true);
+  if($('app')) $('app').classList.remove('ended');
+  // Keep a backup copy of the finished session even before End Game is tapped.
+  try{ var s=current(); if(s) backupExportToLocalStorage(exportJsonText(), S.exportFilename(s)); }catch(e){}
+  save();
+  render();
+}
+function endGame(){
+  if(!finalPending) return;
+  finalPending=false;
+  save();
+  enterEnd();
+}
 function enterEnd(){
+  finalPending=false;
   show('startScreen',false); show('playScreen',true); // keep table visible
   render();
   showEndBanner();
@@ -1918,10 +1970,11 @@ function renderTable(){
       if(p.inHand&&p.hole&&p.hole.length) hc=p.hole.map(function(c){return cardHTML(c,(p.folded?' dim':'')+(isWin?' win':''));}).join('');
       var hn=made || (p.inHand&&p.hole&&p.hole.length? S.heroHandName(p.hole, st.board) : '');
       if(p.inHand&&p.folded) hn='Folded';
-      inner+='<div class="hole hero-cards">'+hc+'</div>'+
+      // Plate and any Wins badge stack in one column so the badge stays inside Max's seat.
+      inner+='<div class="hole hero-cards">'+hc+'</div><div class="hero-col">'+
         '<div class="plate"><div class="hero-hand" title="'+esc(hn)+'">'+esc(shortHand(hn))+'</div><div class="nm">'+esc(p.name)+'</div>'+
-        '<div class="meta"><span class="pos'+(p.i===st.button?' btn':'')+'">'+esc(seatLab)+'</span><span class="stk '+sc+'">'+fmt(p.stack)+'</span></div></div>';
-      if(isWin) tag='<div class="tag win">Wins '+esc(fmt(winners[p.i]))+'</div>';
+        '<div class="meta"><span class="pos'+(p.i===st.button?' btn':'')+'">'+esc(seatLab)+'</span><span class="stk '+sc+'">'+fmt(p.stack)+'</span></div></div>'+
+        (isWin?'<div class="tag win">Wins '+esc(fmt(winners[p.i]))+'</div>':'')+'</div>';
     } else {
       if(p.inHand&&!p.folded){
         if(faceUp) inner+='<div class="hole shown">'+p.hole.map(function(c){return cardHTML(c,(isWin?'win':''));}).join('')+'</div>';
@@ -2121,13 +2174,23 @@ function goNextHand(){
     sessionResult=res;
     lastPublic=res.public;
     save();
-    if(res.state.complete) enterEnd();
+    if(res.state.complete) enterFinalHand();
     else render();
   }catch(e){ flashErr(e.message||String(e)); }
 }
 
 function renderControls(){
   var s=current();
+  if(s.complete && finalPending){
+    // Last hand of the session: show its result like any other hand, then End Game.
+    show('controls',true); show('prompt',true);
+    $('prompt').textContent=handResultText(s);
+    $('acts').innerHTML='<button type="button" class="abtn nexthand endgame" id="btnEndGame">End Game</button>';
+    if($('customAmt')) $('customAmt').parentElement.classList.add('hidden');
+    $('err').textContent='';
+    $('btnEndGame').addEventListener('click', endGame);
+    return;
+  }
   if(s.complete){ show('controls',false); show('prompt',false); if($('customAmt')) $('customAmt').parentElement.classList.add('hidden'); return; }
   show('controls',true); show('prompt',true);
   if(s.awaitingNext){
@@ -2183,7 +2246,7 @@ function takeAction(act, fromCustom){
     sessionResult=res;
     lastPublic=res.public;
     save();
-    if(res.state.complete) enterEnd();
+    if(res.state.complete) enterFinalHand();
     else render();
   }catch(e){
     flashErr(e.message||String(e));
@@ -2247,6 +2310,7 @@ function downloadsBlocked(){
    so the next session opens on a clean table. Export at the end of that session works as usual. */
 function closeLiveExport(){ var live=$('liveExportPanel'); if(live) live.classList.add('hidden'); }
 function resetExportUi(){
+  finalPending=false;
   closeLiveExport();
   var app=$('app'); if(app) app.classList.remove('ended');
   document.querySelectorAll('.export-json').forEach(function(el){ el.value=''; try{ el.blur(); }catch(e){} });
@@ -2732,8 +2796,14 @@ function maybeAutoExport(){
   });
 }
 
-function attachSession(s){
+function attachSession(s, opts){
   if(!s) return;
+  if(opts&&opts.finalHand&&s.complete){
+    sessionResult={state:s, public:{complete:true, current:s.engine?S.publicState(s.engine):null, awaitingNext:false}};
+    lastPublic=sessionResult.public;
+    enterFinalHand();
+    return;
+  }
   sessionResult={state:s, public:{complete:!!s.complete, current:s.engine?S.publicState(s.engine):null, awaitingNext:!!s.awaitingNext}};
   lastPublic=sessionResult.public;
   if(s.complete) enterEnd();
@@ -2744,6 +2814,9 @@ function attachSession(s){
 // Exposed for headless tests and for the Copy / Export controls.
 window.GdrPlayerUi={
   resetExportUi:function(){ resetExportUi(); },
+  showFinalHand:function(){ if(current()&&current().complete) enterFinalHand(); },
+  endGame:function(){ endGame(); },
+  finalPending:function(){ return !!finalPending; },
   closeLiveExport:function(){ closeLiveExport(); },
   startNew:function(){ return startNew(); },
   goStart:function(){ return goStart(); },
@@ -2757,6 +2830,8 @@ window.GdrPlayerUi={
   downloadsBlocked:downloadsBlocked,
   isIOS:isIOS,
   nextSessionNumber:function(){ return nextSessionNumber(); },
+  remoteSession:function(){ return {next:remoteNextSession, status:remoteSessionStatus}; },
+  refreshRemoteSession:function(){ return fetchRemoteSession(); },
   exportBoxValue:function(){ var el=document.querySelector('.export-json'); return el?el.value:''; },
   openLog:function(){ setLogOpen(true); },
   closeLog:function(){ setLogOpen(false); },
@@ -2795,18 +2870,26 @@ function toggleLog(){
 function goStart(){
   resetExportUi();
   show('playScreen',false); show('endScreen',false); show('startScreen',true);
+  sessNumEdited=false;
   if($('sessNum')) $('sessNum').value=String(nextSessionNumber());
+  fetchRemoteSession();
   var saved=loadSaved();
   var resume=$('btnResume');
   if(saved && saved.state && !saved.state.complete){
     resume.classList.remove('hidden');
     resume.textContent='Resume hand '+(saved.state.engine.handNo)+' of '+(saved.state.handLimit);
+  } else if(saved && saved.state && saved.state.complete && saved.finalPending){
+    // Closed the app on the final hand before End Game: offer to finish and export it.
+    resume.classList.remove('hidden');
+    resume.textContent='Finish GDR'+(saved.state.session||'')+' (final hand)';
+    if($('sessNum') && Number.isInteger(saved.state.session)) $('sessNum').value=String(Math.max(nextSessionNumber(), saved.state.session+1));
   } else resume.classList.add('hidden');
 }
 
 function bind(){
   $('btnStart').addEventListener('click', startNew);
   $('btnResume').addEventListener('click', resumeSaved);
+  if($('sessNum')) $('sessNum').addEventListener('input', function(){ sessNumEdited=true; });
   $('btnExport').addEventListener('click', function(){ downloadExport(); });
   $('btnExport2').addEventListener('click', function(){ downloadExport(); });
   if($('btnCopy')) $('btnCopy').addEventListener('click', function(){ copyHandHistory(); });

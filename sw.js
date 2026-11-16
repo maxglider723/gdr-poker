@@ -1,5 +1,5 @@
-/* GDR Poker service worker — app-shell cache. Version 9821a50cfe31. */
-const CACHE = 'gdr-shell-9821a50cfe31';
+/* GDR Poker service worker — app-shell cache. Version 463f57784527. */
+const CACHE = 'gdr-shell-463f57784527';
 const SHELL = ["./","./index.html","./manifest.webmanifest","./icons/apple-touch-icon.png","./icons/icon-192.png","./icons/icon-512.png","./icons/icon-512-maskable.png"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -10,6 +10,8 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  // Shared session counter: never cached, straight to the network (the app falls back to its local counter).
+  if (new URL(req.url).pathname.endsWith('/session.json')) return;
   if (req.mode === 'navigate') {
     // Network first so a new version arrives when online; cached shell when offline.
     e.respondWith(fetch(req).then((res) => {
