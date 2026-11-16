@@ -275,9 +275,6 @@ input,textarea,select{font-size:16px}
   #startScreen h1,#endScreen h1{font-size:24px}
   #startScreen .facts{grid-template-columns:1fr}
   /* End of session on a phone: show the export screen, not a squeezed table */
-  #app:has(#endScreen:not(.hidden)) #main,
-  #app:has(#endScreen:not(.hidden)) #liveExportPanel{display:none}
-  #app:has(#endScreen:not(.hidden)) #playScreen{flex:0 0 auto}
 }
 /* Tall phones (iPhone 13 and up): four feed lines */
 @media (max-width:640px) and (min-height:800px){
@@ -318,9 +315,6 @@ input,textarea,select{font-size:16px}
   .custom input,.custom button{min-height:44px}
   #playBody.log-open #ticker{display:none}
   #playBody.log-open #logPane.open{width:auto;height:clamp(96px,30dvh,140px);max-height:clamp(96px,30dvh,140px);margin:2px 8px 0 0}
-  #app:has(#endScreen:not(.hidden)) #main,
-  #app:has(#endScreen:not(.hidden)) #liveExportPanel{display:none}
-  #app:has(#endScreen:not(.hidden)) #playScreen{flex:0 0 auto}
   #startScreen,#endScreen{padding:12px 16px}
   #endScreen .hbtn{min-height:44px}
   .export-json{font-size:16px;line-height:1.35}
@@ -333,6 +327,23 @@ input,textarea,select{font-size:16px}
   #potBox{font-size:16px}
   .abtn{font-size:16px}
 }
+
+/* ---- Export UI ---- */
+/* End of session (any screen size): the end screen stands alone, no squeezed table behind it. */
+#app.ended #main,#app.ended #liveExportPanel,
+#app:has(#endScreen:not(.hidden)) #main,#app:has(#endScreen:not(.hidden)) #liveExportPanel{display:none !important}
+#app.ended #playScreen,#app:has(#endScreen:not(.hidden)) #playScreen{flex:0 0 auto}
+/* Mid-game export: a full-screen sheet over the table with its own Close button, so it never
+   squeezes or overlaps the table. New game and Close both hide it. */
+#liveExportPanel{position:fixed;z-index:50;inset:0;margin:0;max-height:none;border-radius:0;border:0;display:flex;flex-direction:column;gap:6px;
+  padding:calc(env(safe-area-inset-top) + 10px) calc(env(safe-area-inset-right) + 14px) calc(env(safe-area-inset-bottom) + 14px) calc(env(safe-area-inset-left) + 14px);
+  background:var(--bg);overflow:auto}
+#liveExportPanel .export-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:18px;font-weight:800}
+#liveExportPanel .export-head .hbtn{min-height:44px;padding:0 18px;font-size:15px}
+#liveExportPanel .export-status{margin:0;font-size:15px;line-height:1.4}
+#liveExportPanel .export-label{margin:4px 0 0;font-size:13px}
+#liveExportPanel .export-json{flex:1 1 auto;min-height:120px;max-height:none;resize:none}
+@media (min-width:900px){ #liveExportPanel{inset:5vh 10vw;border-radius:16px;border:1px solid #2c3f35;box-shadow:0 20px 60px rgba(0,0,0,.7)} }
 
 </style>
 </head>
@@ -381,7 +392,8 @@ input,textarea,select{font-size:16px}
       <span class="download-banner-msg">Downloads are blocked here — open this file in Chrome or Edge to save logs.</span>
       <button type="button" class="hbtn btnCopyFolderPath">Copy folder path</button>
     </div>
-    <div id="liveExportPanel" class="export-panel hidden">
+    <div id="liveExportPanel" class="export-panel hidden" role="dialog" aria-label="Hand history export">
+      <div class="export-head"><span>Hand history</span><button type="button" class="hbtn" id="btnCloseExport">Close</button></div>
       <p class="export-status hidden" id="liveExportStatus"></p>
       <label class="export-label" for="liveExportBox">Hand history JSON — select and copy, or paste into chat</label>
       <textarea id="liveExportBox" class="export-json" readonly spellcheck="false" aria-label="Hand history JSON"></textarea>
@@ -1807,6 +1819,7 @@ function startNew(){
   lastPublic=res.public;
   autoExported=false;
   autoExportAttempted=false;
+  resetExportUi();
   save();
   if(res.state.complete) enterEnd();
   else enterPlay();
@@ -1819,6 +1832,7 @@ function resumeSaved(){
   lastPublic=saved.lastPublic;
   autoExported=!!saved.autoExported;
   autoExportAttempted=!!saved.autoExportAttempted || !!saved.autoExported;
+  if(!saved.state.complete) resetExportUi();
   // Recompute public in case
   lastPublic=lastPublic||{current:S.publicState(saved.state.engine), widget:saved.state.complete?null:W.widget(saved.state.engine), complete:!!saved.state.complete, narration:[]};
   if(saved.state.complete) enterEnd();
@@ -1844,6 +1858,7 @@ function showEndBanner(){
   $('endPnl').className='pnl '+(profit>0?'up':profit<0?'down':'');
   $('endCash').textContent='Cashout '+fmt(hero.stack)+'  ·  '+s.history.length+' of '+s.handLimit+' hands  ·  '+s.decisions.length+' decisions';
   show('endScreen',true);
+  if($('app')) $('app').classList.add('ended');
   show('controls',false);
   maybeAutoExport();
 }
@@ -2226,6 +2241,21 @@ function downloadsBlocked(){
     if(fe) return false; // iframe, not sandboxed
     return true; // frameElement hidden (cross-origin) — assume blocked
   }catch(e){ return true; }
+}
+
+/* New game: close every export / share / copy / end-of-session panel and clear its status,
+   so the next session opens on a clean table. Export at the end of that session works as usual. */
+function closeLiveExport(){ var live=$('liveExportPanel'); if(live) live.classList.add('hidden'); }
+function resetExportUi(){
+  closeLiveExport();
+  var app=$('app'); if(app) app.classList.remove('ended');
+  document.querySelectorAll('.export-json').forEach(function(el){ el.value=''; try{ el.blur(); }catch(e){} });
+  setExportStatus('');
+  show('endScreen',false);
+  ['endTitle','endReason','endPnl','endCash'].forEach(function(id){ if($(id)) $(id).textContent=''; });
+  if($('endPnl')) $('endPnl').className='pnl';
+  show('controls',true); show('prompt',true);
+  try{ var sel=window.getSelection&&window.getSelection(); if(sel&&sel.removeAllRanges) sel.removeAllRanges(); }catch(e){}
 }
 
 function revealExportPanels(){
@@ -2713,6 +2743,10 @@ function attachSession(s){
 
 // Exposed for headless tests and for the Copy / Export controls.
 window.GdrPlayerUi={
+  resetExportUi:function(){ resetExportUi(); },
+  closeLiveExport:function(){ closeLiveExport(); },
+  startNew:function(){ return startNew(); },
+  goStart:function(){ return goStart(); },
   attachSession:attachSession,
   downloadExport:function(){ return downloadExport(); },
   copyHandHistory:function(){ return copyHandHistory(); },
@@ -2759,6 +2793,7 @@ function toggleLog(){
 }
 
 function goStart(){
+  resetExportUi();
   show('playScreen',false); show('endScreen',false); show('startScreen',true);
   if($('sessNum')) $('sessNum').value=String(nextSessionNumber());
   var saved=loadSaved();
@@ -2790,6 +2825,7 @@ function bind(){
     el.addEventListener('click', function(){ copyFolderPath(); });
   });
   $('btnLog').addEventListener('click', toggleLog);
+  if($('btnCloseExport')) $('btnCloseExport').addEventListener('click', closeLiveExport);
   $('btnNew').addEventListener('click', function(){
     if(current() && !current().complete){
       if(!confirm('Leave this rehearsal? You can export the hand history first.')) return;

@@ -1,5 +1,5 @@
-/* GDR Poker service worker — app-shell cache. Version 1689f1e90b93. */
-const CACHE = 'gdr-shell-1689f1e90b93';
+/* GDR Poker service worker — app-shell cache. Version 9821a50cfe31. */
+const CACHE = 'gdr-shell-9821a50cfe31';
 const SHELL = ["./","./index.html","./manifest.webmanifest","./icons/apple-touch-icon.png","./icons/icon-192.png","./icons/icon-512.png","./icons/icon-512-maskable.png"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
