@@ -1,0 +1,2644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Game-Day Rehearsal</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#0a120e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GDR">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+
+<meta name="description" content="Offline 24-hand game-day rehearsal poker. Same GDR engine, bios, and review export. No server required.">
+<style>
+:root{--bg:#0a120e;--felt1:#23864a;--felt2:#0f4f2a;--rail:#4a2f17;--gold:#f5c542;--up:#4ade80;--down:#f87171;--txt:#eef3ef;--mut:#9fb3a7;--panel:#111c16;--btn:#1f2d26;--btn2:#2b3d33;--danger:#c62828;--acc:#2e7d4f;--agg:#ff7a00;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow-x:hidden;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+#app{display:flex;flex-direction:column;height:100%;min-height:100%;max-width:1180px;margin:0 auto;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+#startScreen,#endScreen{overflow:auto;min-height:0}
+#playScreen{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+header{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:6px 10px;height:46px}
+.brand{font-weight:800;letter-spacing:.3px;font-size:15px;white-space:nowrap}
+.brand span{color:var(--gold)}
+#sess{flex:1;text-align:center;font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#sess b.up{color:var(--up)} #sess b.down{color:var(--down)}
+.hbtn{background:var(--btn);border:1px solid #2c3f35;border-radius:10px;height:34px;min-width:38px;padding:0 10px;font-size:13px;font-weight:600}
+.hbtn:hover{border-color:#4a6a58}
+.hbtn.primary{background:#1d5a37;border-color:#2c8a55}
+#main{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+#playBody{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+#tableCol{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;overflow:hidden;min-width:0}
+#tableWrap{position:relative;flex:1 1 auto;min-height:0;margin:0 4px;overflow:hidden;--bw:40px;--hw:58px}
+#felt{position:absolute;left:10%;right:10%;top:7%;bottom:9%;border-radius:50%;background:radial-gradient(ellipse at 50% 45%,var(--felt1) 0%,#1a6e3b 45%,var(--felt2) 100%);
+  border:10px solid var(--rail);box-shadow:0 0 0 2px #2a1a0c,inset 0 0 40px rgba(0,0,0,.55),0 10px 30px rgba(0,0,0,.6)}
+#felt::after{content:"";position:absolute;inset:8%;border-radius:50%;border:1px solid rgba(255,255,255,.07)}
+#feltLogo{position:absolute;left:50%;top:68%;transform:translate(-50%,-50%);font-size:11px;letter-spacing:2px;color:rgba(255,255,255,.14);font-weight:800;white-space:nowrap;pointer-events:none}
+#potBox{position:absolute;left:50%;top:34%;transform:translate(-50%,-50%);background:rgba(0,0,0,.45);padding:3px 10px;border-radius:12px;font-weight:700;font-size:13px;white-space:nowrap;z-index:3}
+#potBox small{color:var(--mut);font-weight:500}
+#board{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);display:flex;gap:4px;z-index:3}
+.slot{width:var(--bw);height:calc(var(--bw)*1.4);border-radius:6px;border:1px dashed rgba(255,255,255,.12)}
+.card{position:relative;width:var(--cw,40px);height:calc(var(--cw,40px)*1.4);border-radius:calc(var(--cw,40px)*.13);background:linear-gradient(#fff,#eef0f2);color:#111;box-shadow:0 2px 5px rgba(0,0,0,.45);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;line-height:1;user-select:none;flex:0 0 auto}
+.card .r{font-size:calc(var(--cw,40px)*.46);letter-spacing:-1px}
+.card .s{font-size:calc(var(--cw,40px)*.46);margin-top:1px}
+.card.red{color:#d11a2a}
+.card.back{background:repeating-linear-gradient(45deg,#8e1b2b 0 4px,#a8263a 4px 8px);border:2px solid #fff}
+.card.back *{display:none}
+.card.win{box-shadow:0 0 0 2px var(--gold),0 0 12px var(--gold)}
+.card.dim{filter:brightness(.55)}
+#board .card{--cw:var(--bw)}
+.seat{position:absolute;transform:translate(-50%,-50%);width:86px;z-index:4;transition:opacity .3s,filter .3s}
+.seat .plate{position:relative;background:rgba(8,14,11,.86);border:1px solid #2f4a3c;border-radius:10px;padding:3px 4px 4px;text-align:center;transition:box-shadow .2s,border-color .2s}
+.seat .pos{font-size:9px;font-weight:800;letter-spacing:.6px;color:#ffe9a8;line-height:1.15;text-transform:uppercase;text-shadow:0 1px 2px #000}
+.seat .nm{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat .stk{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.stk.up{color:var(--up)} .stk.down{color:var(--down)}
+.seat .mini{position:absolute;left:50%;top:-20px;transform:translateX(-50%);display:flex;gap:2px;z-index:-1}
+.seat .mini .card{--cw:18px}
+.seat .shown{position:absolute;left:50%;bottom:calc(100% - 4px);transform:translateX(-50%);display:flex;gap:2px;z-index:6}
+.seat .shown .card{--cw:28px}
+.seat .shown-hand{position:absolute;left:50%;bottom:calc(100% + 36px);transform:translateX(-50%);font-size:10px;font-weight:800;color:#ffe9a8;background:rgba(0,0,0,.65);padding:1px 6px;border-radius:8px;white-space:nowrap;z-index:7;text-shadow:0 1px 2px #000;max-width:130px;overflow:hidden;text-overflow:ellipsis}
+.seat .shown-hand.win{color:#111;background:var(--gold)}
+.seat.winner .plate{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold),0 0 14px rgba(245,197,66,.45)}
+.seat.active .plate{border-color:#4cff8e;box-shadow:0 0 0 2px #36e07a,0 0 16px 4px rgba(64,255,130,.65);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 2px #36e07a,0 0 24px 8px rgba(64,255,130,.35)}}
+.seat.folded{opacity:.42;filter:grayscale(.7)}
+.seat.out{display:none}
+.seat .tag{position:absolute;left:50%;top:100%;transform:translate(-50%,3px);font-size:10px;font-weight:700;background:#000a;padding:1px 6px;border-radius:8px;white-space:nowrap;color:#dfe;z-index:5}
+.seat .tag.agg{color:#111;background:var(--agg);box-shadow:0 0 0 1px #fff8}
+.seat .tag.fold{color:#aaa}
+.seat.aggressor .plate{border-color:var(--agg);box-shadow:0 0 0 3px var(--agg),0 0 14px rgba(255,122,0,.55);border-width:2px}
+.seat.aggressor .stk{color:var(--agg)}
+.seat.hero{width:150px;z-index:5}
+.seat.hero .plate{border-color:var(--gold);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px 6px;padding:4px 8px}
+.seat.hero .pos{width:100%;font-size:11px;order:-1}
+.seat.hero .plate::before{content:"";width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:11px solid var(--gold);filter:drop-shadow(0 0 3px var(--gold));flex:0 0 auto}
+.seat.hero .nm{font-size:13px} .seat.hero .stk{font-size:14px}
+.hero-cards{display:flex;justify-content:center;gap:6px;margin-bottom:4px;min-height:calc(var(--hw)*1.4)}
+.hero-cards .card{--cw:var(--hw)}
+.hero-hand{font-size:11px;color:#ffe9a8;text-align:center;min-height:14px;margin-bottom:2px;text-shadow:0 1px 2px #000;white-space:nowrap}
+.chip{position:absolute;transform:translate(-50%,-50%);z-index:3;display:flex;align-items:center;gap:3px;font-size:11px;font-weight:700;background:rgba(0,0,0,.55);padding:1px 6px 1px 2px;border-radius:10px;white-space:nowrap}
+.chip i{width:13px;height:13px;border-radius:50%;background:radial-gradient(circle,#fff 0 25%,#e53935 26% 60%,#fff 61% 68%,#e53935 69%);display:inline-block}
+.chip.agg-amt{background:var(--agg);color:#111;font-weight:800}
+.dbtn,.blind{position:absolute;transform:translate(-50%,-50%);z-index:3;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900}
+.dbtn{width:20px;height:20px;background:#fff;color:#111;font-size:11px;box-shadow:0 1px 4px #000}
+.blind{width:18px;height:18px;font-size:8px;color:#fff;background:#3949ab;border:1px solid #fff8}
+.blind.bb{background:#6a1b9a}
+#ticker{flex:0 0 auto;margin:2px 8px 0;background:var(--panel);border:1px solid #213229;border-radius:10px;padding:6px 10px;font-size:13px;min-height:32px;display:flex;align-items:center;gap:8px}
+#ticker .txt{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#ticker .lg{flex:0 0 auto;font-size:12px;color:var(--mut);background:none;border:1px solid #2c3f35;border-radius:8px;padding:2px 8px}
+#logPane{display:none;background:var(--panel);border:1px solid #213229;border-radius:10px;padding:8px 12px;font-size:12.5px;line-height:1.45;white-space:pre-wrap;font-variant-numeric:tabular-nums;
+  overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;min-height:0;position:relative;z-index:1}
+#logPane.open{display:block}
+#logPane .handblk{margin:0 0 10px;padding-bottom:8px;border-bottom:1px solid #213229}
+#logPane .handblk:last-child{border-bottom:0;margin:0;padding:0}
+#logPane .hnh{color:var(--gold);font-weight:700}
+/* Narrow (default): log sits below the table, fixed height, scrolls on its own. */
+#playBody.log-open{flex-direction:column}
+#playBody.log-open #logPane.open{flex:0 0 168px;height:168px;max-height:168px;width:auto;margin:4px 8px 6px}
+#controls{flex:0 0 auto;padding:6px 8px 10px;min-height:0;display:flex;flex-direction:column;gap:6px}
+#prompt{flex:0 0 auto;font-size:13px;color:var(--mut);min-height:18px;padding:0 4px}
+/* Wide: log in its own column beside the table, stretching to the table column's height. */
+@media (min-width:900px){
+  #playBody.log-open{flex-direction:row;align-items:stretch;gap:8px;padding-right:6px}
+  #playBody.log-open #tableCol{flex:1 1 auto;min-width:0}
+  #playBody.log-open #logPane.open{flex:0 0 300px;width:300px;height:auto;max-height:none;align-self:stretch;margin:0 4px 0 0}
+}
+.row{display:grid;gap:6px}
+.r2{grid-template-columns:1fr 1fr} .r3{grid-template-columns:repeat(3,1fr)} .r1{grid-template-columns:1fr}
+.abtn{min-height:48px;border-radius:12px;border:1px solid #33493d;background:var(--btn2);font-size:14px;font-weight:700;padding:4px 6px;line-height:1.15}
+.abtn small{display:block;font-size:11px;font-weight:500;color:#c9d6ce}
+.abtn:active{transform:scale(.97)}
+.abtn:hover{border-color:#5a8a70}
+.abtn.fold{background:#3a2a2a;border-color:#5a3a3a}
+.abtn.call{background:#1d5a37;border-color:#2c8a55}
+.abtn.bet{background:#24384a;border-color:#355a78}
+.abtn.danger{background:var(--danger);border-color:#ff6b6b;color:#fff}
+.abtn.nexthand{width:100%;min-height:56px;font-size:18px;font-weight:800;background:#1d5a37;border:2px solid var(--gold);color:#fff;letter-spacing:.3px}
+.abtn.nexthand:hover{background:#227044}
+.custom{display:flex;gap:6px;align-items:center}
+.custom input{flex:1;min-height:42px;border-radius:10px;border:1px solid #33493d;background:#0d1612;color:var(--txt);padding:0 12px;font-size:15px;font-weight:600}
+.custom input:focus{outline:none;border-color:var(--gold)}
+.custom button{min-height:42px;padding:0 16px;border-radius:10px;border:1px solid #355a78;background:#24384a;font-weight:700}
+.err{color:var(--down);font-size:12px;min-height:16px;padding:0 4px}
+#startScreen,#endScreen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px;text-align:center;gap:12px}
+#startScreen h1,#endScreen h1{font-size:28px;margin:0;letter-spacing:.3px}
+#startScreen h1 span,#endScreen h1 span{color:var(--gold)}
+#startScreen p,#endScreen p{max-width:560px;color:var(--mut);line-height:1.5;margin:0}
+#startScreen .facts{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;text-align:left;max-width:520px;margin:8px 0;font-size:14px}
+#startScreen .facts b{color:var(--txt)}
+.start-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+.start-row label{font-size:13px;color:var(--mut)}
+.start-row input{width:90px;height:40px;border-radius:10px;border:1px solid #33493d;background:#0d1612;color:var(--txt);padding:0 10px;font-size:16px;font-weight:700;text-align:center}
+.big{min-height:52px;padding:0 28px;font-size:17px;border-radius:14px;font-weight:800}
+.hint{font-size:12px;color:var(--mut);max-width:540px;line-height:1.45}
+#lineup{font-size:14px;color:var(--txt);max-width:560px}
+#endScreen .pnl{font-size:36px;font-weight:800;font-variant-numeric:tabular-nums}
+#endScreen .pnl.up{color:var(--up)} #endScreen .pnl.down{color:var(--down)}
+.hidden{display:none !important}
+@media (max-width:640px){
+  #tableWrap{--bw:32px;--hw:48px}
+  .seat{width:70px} .seat.hero{width:120px}
+  .seat .nm{font-size:10px}
+  #startScreen .facts{grid-template-columns:1fr}
+  #playBody.log-open #logPane.open{flex:0 0 148px;height:148px;max-height:148px}
+}
+
+.saved-note{font-size:14px;font-weight:700;color:var(--gold);margin:0;max-width:540px}
+
+.export-panel{margin:8px 10px 12px;padding:10px 12px;background:var(--panel);border:1px solid #213229;border-radius:12px;text-align:left}
+.export-label{display:block;font-size:12px;color:var(--mut);font-weight:600;margin:8px 0 4px}
+.export-json{width:100%;min-height:160px;max-height:280px;resize:vertical;border-radius:10px;border:1px solid #33493d;background:#0d1612;color:var(--txt);padding:8px 10px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:11px;line-height:1.4;white-space:pre}
+.export-json:focus{outline:none;border-color:var(--gold)}
+.export-status{font-size:14px;font-weight:700;margin:0 0 8px;max-width:none}
+.export-status.ok{color:var(--gold)}
+.export-status.warn{color:#ffd27a}
+.export-status.err{color:var(--down)}
+#liveExportPanel{flex:0 0 auto;margin:4px 8px 0}
+#endScreen .export-panel{max-width:720px;width:100%;margin:8px auto 0}
+header .hbtn{white-space:nowrap}
+@media (max-width:640px){
+  header{flex-wrap:wrap;height:auto}
+  .export-json{min-height:120px}
+}
+
+.download-banner{flex:0 0 auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 8px 4px;padding:8px 12px;background:#3a2f12;border:1px solid var(--gold);border-radius:10px;color:#ffe9a8;font-size:13px;font-weight:650;text-align:left;max-width:100%}
+.download-banner.hidden{display:none !important}
+.download-banner-msg{flex:1 1 220px;line-height:1.4}
+.folder-label{font-size:13px;font-weight:700;color:var(--gold);margin:0}
+#startScreen .download-banner,#endScreen .download-banner{max-width:720px;width:100%;margin:4px auto}
+#startScreen .folder-label{max-width:540px}
+
+html.ios body{-webkit-text-size-adjust:100%}
+/* iPhone/iPad: no folder saving; Export (share sheet → Save to Files) is the main button. */
+html.ios .btnSaveFolder,html.ios .folder-label,html.ios .btnCopyFolderPath{display:none !important}
+html.ios #btnExport2{background:#1d5a37;border-color:var(--gold);order:-1}
+html.ios #btnCopy{background:var(--btn2,#1b2a22);border-color:#33493d}
+
+/* ===================== Responsive (mobile-first overrides) ===================== */
+html,body{overscroll-behavior:none}
+#app{height:100vh;height:100svh;height:100dvh;min-height:0}
+button,input,textarea,select,.abtn,.hbtn{touch-action:manipulation}
+input,textarea,select{font-size:16px}
+.custom input{font-size:16px}
+.export-json{font-size:12px}
+/* Fluid table pieces */
+#tableWrap{--bw:clamp(28px,8.4vw,44px);--hw:clamp(40px,11.5vw,58px)}
+.seat{width:clamp(66px,19vw,86px)}
+.seat.hero{width:clamp(112px,32vw,150px)}
+.seat .nm{font-size:clamp(10px,2.9vw,11px)}
+.seat .stk{font-size:clamp(11px,3.1vw,12px)}
+#potBox{font-size:clamp(12px,3.4vw,13px)}
+/* Start/end screens scroll from the top when taller than the screen */
+#startScreen,#endScreen{justify-content:flex-start;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#startScreen>:first-child,#endScreen>:first-child{margin-top:auto}
+#startScreen>:last-child,#endScreen>:last-child{margin-bottom:auto}
+/* Live feed: 3+ lines, newest at the bottom, older lines scroll inside */
+#ticker{align-items:stretch;padding:4px 6px 4px 10px;min-height:0}
+#ticker .txt{white-space:normal;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  font-size:13px;line-height:1.35;height:calc(3 * 1.35em + 4px);min-height:calc(3 * 1.35em + 4px)}
+#ticker .txt .ln{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ticker .txt .ln:last-child{color:var(--txt);font-weight:650}
+#ticker .txt .ln:not(:last-child){color:#c4d3ca}
+/* Bottom bar: hero cards (phones only), prompt, actions */
+#bottomBar{flex:0 0 auto;display:flex;flex-direction:column;min-height:0}
+#heroBar{display:none}
+.hb-cards{display:flex;gap:4px}
+.hb-cards .card{--cw:clamp(38px,11vw,50px)}
+.hb-txt{min-width:0}
+.hb-hand{font-size:13px;font-weight:800;color:#ffe9a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hb-me{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wide{display:inline}
+#liveExportPanel{max-height:34vh;max-height:34dvh;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+
+/* ---- Phones, portrait (≈ 320–640px wide) ---- */
+@media (max-width:640px){
+  header{flex-wrap:wrap;height:auto;gap:6px;padding:4px 8px}
+  header .brand{display:none}
+  #sess{flex:1 0 100%;order:-1;font-size:12px;line-height:18px}
+  header .hbtn{flex:1 1 0;min-width:0;min-height:44px;padding:0 4px;font-size:13px;overflow:hidden;text-overflow:ellipsis}
+  .wide{display:none}
+  .export-panel .hbtn,#endScreen .hbtn,.start-row .hbtn,.download-banner .hbtn,#btnHow{min-height:44px;padding:0 14px}
+  #tableWrap{margin:0 2px}
+  #felt{left:7%;right:7%;top:5%;bottom:5%;border-width:8px}
+  #ticker{margin:2px 6px 0}
+  #bottomBar{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:2px 8px;padding:4px 6px 2px}
+  #heroBar{display:contents}
+  #heroBar .hb-cards{grid-column:1;grid-row:1/3;align-self:center}
+  #heroBar .hb-txt{grid-column:2;grid-row:1}
+  #prompt{grid-column:2;grid-row:2;padding:0;font-size:12px;min-height:16px;line-height:1.3}
+  #controls{grid-column:1/-1;padding:4px 0 2px}
+  .seat.hero .hero-cards,.seat.hero .hero-hand{display:none}
+  .seat.hero{width:clamp(96px,28vw,130px)}
+  .seat.hero .plate::before{display:none}
+  .row>.abtn{min-width:0;min-height:48px;overflow-wrap:anywhere;font-size:14px}
+  .custom{max-width:100%}
+  .custom input,.custom button{min-height:44px}
+  #customAmt{min-width:0}
+  .export-json{min-height:96px}
+  #playBody.log-open #logPane.open{flex:0 0 clamp(96px,20dvh,168px);height:clamp(96px,20dvh,168px);max-height:clamp(96px,20dvh,168px);margin:4px 6px}
+  #startScreen,#endScreen{padding:16px 14px;gap:10px}
+  #startScreen h1,#endScreen h1{font-size:24px}
+  #startScreen .facts{grid-template-columns:1fr}
+  /* End of session on a phone: show the export screen, not a squeezed table */
+  #app:has(#endScreen:not(.hidden)) #main,
+  #app:has(#endScreen:not(.hidden)) #liveExportPanel{display:none}
+  #app:has(#endScreen:not(.hidden)) #playScreen{flex:0 0 auto}
+}
+/* Very short portrait phones (iPhone SE 375×667): tighten a little */
+@media (max-width:640px) and (max-height:700px){
+  #ticker .txt{font-size:12px}
+  .row>.abtn{min-height:44px;font-size:13px}
+  .hb-cards .card{--cw:36px}
+}
+
+/* ---- Phones, landscape (short screens) ---- */
+@media (orientation:landscape) and (max-height:500px){
+  header{height:auto;padding:2px 8px;gap:6px}
+  header .hbtn{min-height:44px;height:auto}
+  .wide{display:none}
+  #main{flex-direction:row}
+  #playBody{flex:1 1 auto;min-width:0}
+  #bottomBar{flex:0 0 clamp(280px,40vw,400px);overflow-y:auto;-webkit-overflow-scrolling:touch;justify-content:flex-end;padding:0 8px 2px 0;
+    display:grid;grid-template-columns:auto minmax(0,1fr);align-content:end;gap:2px 8px}
+  #heroBar{display:contents}
+  #heroBar .hb-cards{grid-column:1;grid-row:1/3;align-self:center}
+  #heroBar .hb-txt{grid-column:2;grid-row:1}
+  #prompt{grid-column:2;grid-row:2;padding:0;font-size:12px}
+  #controls{grid-column:1/-1;padding:4px 0}
+  .row>.abtn{min-height:44px;min-width:0;font-size:13px}
+  .custom input,.custom button{min-height:44px}
+  .seat.hero .hero-cards,.seat.hero .hero-hand{display:none}
+  .seat.hero .plate::before{display:none}
+  #tableWrap{--bw:clamp(26px,7vh,38px)}
+  .seat{width:clamp(64px,11vw,80px)}
+  .seat.hero{width:clamp(96px,14vw,130px)}
+  #felt{top:6%;bottom:6%}
+  #playBody.log-open{flex-direction:row}
+  #playBody.log-open #logPane.open{flex:0 0 220px;width:220px;height:auto;max-height:none;margin:0 4px}
+  #app:has(#endScreen:not(.hidden)) #main,
+  #app:has(#endScreen:not(.hidden)) #liveExportPanel{display:none}
+  #app:has(#endScreen:not(.hidden)) #playScreen{flex:0 0 auto}
+  #startScreen,#endScreen{padding:12px 16px}
+}
+
+/* ---- Desktop: scale up ---- */
+@media (min-width:1100px) and (min-height:760px){
+  #tableWrap{--bw:46px;--hw:62px}
+  .seat{width:92px} .seat.hero{width:160px}
+  .seat .nm{font-size:12px} .seat .stk{font-size:13px}
+  #potBox{font-size:14px}
+  .abtn{font-size:15px}
+}
+/* Phones: an open hand log takes the feed's place (it already shows every line). */
+@media (max-width:640px){
+  #playBody.log-open #ticker{display:none}
+  #playBody.log-open #logPane.open{flex:0 0 clamp(110px,22dvh,200px);height:clamp(110px,22dvh,200px);max-height:clamp(110px,22dvh,200px)}
+  .export-json{font-size:16px;line-height:1.35}
+}
+/* Tall phones (iPhone 13 and up): four feed lines */
+@media (max-width:640px) and (min-height:800px){
+  #ticker .txt{height:calc(4 * 1.35em + 4px);min-height:calc(4 * 1.35em + 4px)}
+}
+@media (orientation:landscape) and (max-height:500px){
+  #playBody.log-open{flex-direction:column}
+  #playBody.log-open #ticker{display:none}
+  #playBody.log-open #logPane.open{flex:0 0 clamp(96px,30dvh,140px);width:auto;height:clamp(96px,30dvh,140px);max-height:clamp(96px,30dvh,140px);margin:2px 6px}
+  #endScreen .hbtn{min-height:44px}
+  .export-json{font-size:16px;line-height:1.35}
+}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="startScreen">
+    <h1>Game-Day <span>Rehearsal</span></h1>
+    <p>A 24-hand cash-game rehearsal with the same rules, opponent bios, and pot math as the chat sessions. Everything runs in this file, on your computer, with no server and no chat turns.</p>
+    <div class="facts">
+      <div><b>Blinds</b> $0.10 / $0.20</div>
+      <div><b>Buy-in</b> $25, no rebuys</div>
+      <div><b>Length</b> 24 hands</div>
+      <div><b>Seats</b> 9, busted players leave</div>
+      <div><b>Always seated</b> Max, Christian, Marshall, Molly, Lauren Alamo, Jack</div>
+      <div><b>Three extras</b> drawn from Jimmy, Lauren Bauer, Will, Julie, John. Jake stays benched.</div>
+    </div>
+        <div class="download-banner hidden" role="status">
+      <span class="download-banner-msg">Downloads are blocked here — open this file in Chrome or Edge to save logs.</span>
+      <button type="button" class="hbtn btnCopyFolderPath">Copy folder path</button>
+    </div>
+    <div class="start-row">
+      <label for="sessNum">Session number (counts up automatically)</label>
+      <input id="sessNum" type="number" min="1" step="1" placeholder="34" inputmode="numeric">
+      <button type="button" class="hbtn primary big" id="btnStart">Start rehearsal</button>
+      <button type="button" class="hbtn big hidden" id="btnResume">Resume</button>
+      <button type="button" class="hbtn big btnSaveFolder">Save to folder</button>
+    </div>
+    <p class="folder-label hint"></p>
+    <p class="hint ios-hint hidden"><b>On iPhone:</b> play the 24 hands here. At the end, tap <b>Export hand history</b> → <b>Save to Files</b>, then attach the file in Grok Bot chat. You can also tap <b>Export</b> at the top at any time.</p>
+    <p class="hint">The button is drawn at random. Each seat is labeled with its position (BTN, SB, BB, UTG, and so on). After every hand the table pauses with the board, any showdown or all-in cards, and the result — click <b>Next hand</b> to continue. After hand 24 the session-end screen appears and the hand history is offered as a download, a <b>Copy hand history</b> button, and a text box you can select and paste into chat. To save files onto this PC, open this page in <b>Chrome or Edge</b>, click <b>Save to folder</b> once, and pick <code>Documents\PokerLogs</code>. There is no mid-session coaching.</p>
+    <button type="button" class="hbtn" id="btnHow">How export and review work</button>
+    <p class="hint hidden" id="how">When the session ends, the player first tries to write the JSON into the folder you chose with <b>Save to folder</b> (the directory handle is remembered in this browser). If no folder is set, it falls back to the file picker, then to a normal download (for example <code>gdr25-hand-history.json</code>, or a timestamped name if you did not set a session number). A copy is also stored in this browser as a backup. If the download is blocked — as it is inside a chat file preview — a banner will tell you to open the file in Chrome or Edge; use <b>Copy hand history</b>, or select the JSON in the text box and paste it into chat. The file has every action, every street, every player’s hole cards, the stacks, and the exact menu you were shown at each of your decision points. The import script turns it into the same session state the blinded review already reads from a <code>gdrNN_fast.json</code> file, then one review pass grades it and appends it once to the quality ledger. The player itself never touches the ledger.</p>
+  </div>
+
+  <div id="playScreen" class="hidden">
+    <header>
+      <div class="brand">GDR <span>Poker</span></div>
+      <div id="sess"></div>
+      <button type="button" class="hbtn" id="btnLog">Hand log</button>
+      <button type="button" class="hbtn primary" id="btnExport">Export</button>
+      <button type="button" class="hbtn btnSaveFolder">Save to folder</button>
+      <button type="button" class="hbtn" id="btnCopyLive">Copy<span class="wide"> hand history</span></button>
+      <button type="button" class="hbtn" id="btnNew">New</button>
+    </header>
+    <div class="download-banner hidden" role="status">
+      <span class="download-banner-msg">Downloads are blocked here — open this file in Chrome or Edge to save logs.</span>
+      <button type="button" class="hbtn btnCopyFolderPath">Copy folder path</button>
+    </div>
+    <div id="liveExportPanel" class="export-panel hidden">
+      <p class="export-status hidden" id="liveExportStatus"></p>
+      <label class="export-label" for="liveExportBox">Hand history JSON — select and copy, or paste into chat</label>
+      <textarea id="liveExportBox" class="export-json" readonly spellcheck="false" aria-label="Hand history JSON"></textarea>
+    </div>
+    <div id="main">
+      <div id="playBody">
+        <div id="tableCol">
+          <div id="tableWrap">
+            <div id="felt"></div>
+            <div id="feltLogo">NLHE  $0.10/$0.20</div>
+            <div id="potBox">Pot $0.00</div>
+            <div id="board"></div>
+          </div>
+          <div id="ticker"><div class="txt" id="tickerTxt"></div></div>
+        </div>
+        <aside id="logPane" aria-label="Hand log"></aside>
+      </div>
+      <div id="bottomBar">
+      <div id="heroBar" aria-label="Your cards"></div>
+      <div id="prompt"></div>
+      <div id="controls">
+        <div id="acts"></div>
+        <div class="custom">
+          <input id="customAmt" placeholder="$ amount (raise-to / bet total)" inputmode="decimal" autocomplete="off">
+          <button type="button" id="customGo">Go</button>
+        </div>
+        <div class="err" id="err"></div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="endScreen" class="hidden">
+    <h1 id="endTitle">Session complete</h1>
+    <p id="endReason"></p>
+    <div id="endPnl" class="pnl"></div>
+    <p id="endCash"></p>
+    <div class="export-panel" id="endExportPanel">
+          <div class="download-banner hidden" role="status">
+      <span class="download-banner-msg">Downloads are blocked here — open this file in Chrome or Edge to save logs.</span>
+      <button type="button" class="hbtn btnCopyFolderPath">Copy folder path</button>
+    </div>
+      <p class="export-status hidden" id="exportStatus"></p>
+      <div class="start-row">
+        <button type="button" class="hbtn primary big" id="btnCopy">Copy hand history</button>
+        <button type="button" class="hbtn big btnSaveFolder">Save to folder</button>
+        <button type="button" class="hbtn big" id="btnExport2">Export hand history</button>
+        <button type="button" class="hbtn" id="btnSelectJson">Select JSON</button>
+      </div>
+      <p class="folder-label hint"></p>
+      <label class="export-label" for="exportBox">Hand history JSON — select and copy, or paste into chat</label>
+      <textarea id="exportBox" class="export-json" readonly spellcheck="false" aria-label="Hand history JSON"></textarea>
+      <p class="hint ios-hint hidden"><b>On iPhone:</b> tap <b>Export hand history</b>, choose <b>Save to Files</b> (On My iPhone or iCloud Drive), then in Grok Bot chat tap the attach button, pick <b>Files</b>, and choose the <code>gdrNN-hand-history.json</code> file. If sharing does not work, tap <b>Copy hand history</b> and paste it into the chat.</p>
+      <p class="hint desktop-hint">If the file did not appear in Downloads, click <b>Save to folder</b> (in Chrome or Edge) and pick <code>Documents\PokerLogs</code>, or copy the JSON / paste this box into chat. The import script converts it into the same structure as a chat GDR session. Nothing is added to the quality ledger until that review runs.</p>
+    </div>
+  </div>
+</div>
+<script>
+/* GDR browser engine: frozen copy of the trainer engine with the same
+   in-memory adapter patches (cumulative short-raise reopening, nominal
+   short-BB bring-in, uncalled-bet export, all-in toCall, short-all-in
+   round completion). Do not retune. */
+/* ===== Poker engine: cards, evaluator, NLHE betting, side pots ===== */
+var PokerEngine = (function(){
+'use strict';
+var RANKS='23456789TJQKA', SUITS='shdc', SYM=['\u2660','\u2665','\u2666','\u2663'];
+var BB=20, SB=10, BUYIN=2500;
+var RN=['Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Jack','Queen','King','Ace'];
+var RNP=['Twos','Threes','Fours','Fives','Sixes','Sevens','Eights','Nines','Tens','Jacks','Queens','Kings','Aces'];
+function rankOf(c){return c>>2;} function suitOf(c){return c&3;}
+function cardStr(c){return RANKS[c>>2]+SUITS[c&3];}
+function cardPretty(c){var r=RANKS[c>>2];return (r==='T'?'10':r)+SYM[c&3];}
+function parseCard(s){return RANKS.indexOf(s[0].toUpperCase())*4+SUITS.indexOf(s[1].toLowerCase());}
+function parseCards(s){return s.trim().split(/\s+/).filter(Boolean).map(parseCard);}
+function fmt(c){return '$'+(c/100).toFixed(2);}
+function fmtSigned(c){return (c>=0?'+':'-')+'$'+(Math.abs(c)/100).toFixed(2);}
+function r10(x){return Math.round(x/10)*10;}
+
+/* ---- 7-card evaluator. score = cat*16^5 + kickers ---- */
+function straightHigh(mask){var m=(mask<<1)|((mask>>12)&1);for(var h=12;h>=3;h--){if(((m>>(h-3))&31)===31)return h;}return -1;}
+function mk(cat,ks){var s=cat;for(var i=0;i<5;i++){var k=ks[i];s=s*16+(k===undefined||k<0?0:k);}return s;}
+function evalHand(cs){
+  var rc=[0,0,0,0,0,0,0,0,0,0,0,0,0],sc=[0,0,0,0],sm=[0,0,0,0],rm=0,i,r,s;
+  for(i=0;i<cs.length;i++){r=cs[i]>>2;s=cs[i]&3;rc[r]++;sc[s]++;sm[s]|=1<<r;rm|=1<<r;}
+  var fs=-1;for(s=0;s<4;s++)if(sc[s]>=5)fs=s;
+  if(fs>=0){var sf=straightHigh(sm[fs]);if(sf>=0)return mk(8,[sf]);}
+  var q=-1,trips=[],pairs=[];
+  for(r=12;r>=0;r--){if(rc[r]===4){if(q<0)q=r;}else if(rc[r]===3)trips.push(r);else if(rc[r]===2)pairs.push(r);}
+  var ks,k;
+  if(q>=0){k=-1;for(r=12;r>=0;r--)if(r!==q&&rc[r]>0){k=r;break;}return mk(7,[q,k]);}
+  if(trips.length&&(trips.length>1||pairs.length)){var p=Math.max(trips.length>1?trips[1]:-1,pairs.length?pairs[0]:-1);return mk(6,[trips[0],p]);}
+  if(fs>=0){ks=[];for(r=12;r>=0&&ks.length<5;r--)if((sm[fs]>>r)&1)ks.push(r);return mk(5,ks);}
+  var st=straightHigh(rm);if(st>=0)return mk(4,[st]);
+  if(trips.length){ks=[trips[0]];for(r=12;r>=0&&ks.length<3;r--)if(r!==trips[0]&&rc[r]>0)ks.push(r);return mk(3,ks);}
+  if(pairs.length>=2){k=-1;for(r=12;r>=0;r--)if(r!==pairs[0]&&r!==pairs[1]&&rc[r]>0){k=r;break;}return mk(2,[pairs[0],pairs[1],k]);}
+  if(pairs.length===1){ks=[pairs[0]];for(r=12;r>=0&&ks.length<4;r--)if(r!==pairs[0]&&rc[r]>0)ks.push(r);return mk(1,ks);}
+  ks=[];for(r=12;r>=0&&ks.length<5;r--)if(rc[r]>0)ks.push(r);return mk(0,ks);
+}
+function decode(sc){var ks=[];for(var i=0;i<5;i++){ks.unshift(sc%16);sc=Math.floor(sc/16);}return {cat:sc,ks:ks};}
+function handName(score){
+  var d=decode(score),k=d.ks;
+  switch(d.cat){
+    case 8:return k[0]===12?'Royal Flush':'Straight Flush, '+RN[k[0]]+'-high';
+    case 7:return 'Four of a Kind, '+RNP[k[0]];
+    case 6:return 'Full House, '+RNP[k[0]]+' full of '+RNP[k[1]];
+    case 5:return 'Flush, '+RN[k[0]]+'-high';
+    case 4:return 'Straight, '+RN[k[0]]+'-high';
+    case 3:return 'Three of a Kind, '+RNP[k[0]];
+    case 2:return 'Two Pair, '+RNP[k[0]]+' and '+RNP[k[1]];
+    case 1:return 'Pair of '+RNP[k[0]];
+    default:return RN[k[0]]+'-high';
+  }
+}
+function shortHandName(cards){
+  if(cards.length<5){ if(cards.length===2&&(cards[0]>>2)===(cards[1]>>2))return 'Pocket '+RNP[cards[0]>>2]; return ''; }
+  return handName(evalHand(cards));
+}
+
+/* ---- RNG / deck ---- */
+function shuffledDeck(rng){var d=[],i,j,t;for(i=0;i<52;i++)d.push(i);for(i=51;i>0;i--){j=Math.floor(rng()*(i+1));t=d[i];d[i]=d[j];d[j]=t;}return d;}
+
+/* ---- Session / hand state ---- */
+function newSession(names){
+  return {v:1,players:names.map(function(n,i){return {name:n,i:i,stack:BUYIN,hole:[],folded:false,allIn:false,bet:0,contrib:0,acted:false,seenRaise:-1,out:false,inHand:false,startStack:BUYIN,mem:{},shown:false,last:''};}),
+    button:-1,sb:-1,bb:-1,handNo:0,phase:'idle',street:'',board:[],deck:[],currentBet:0,minRaise:BB,raiseId:0,toAct:-1,
+    streetRaises:0,pfAggressor:-1,lastPfRaiseTo:{},streetAggressor:-1,prevAggressor:-1,runout:false,result:null,hh:[],histories:[],
+    stats:{hands:0,vpip:0,pfr:0,won:0,biggest:0,sdSeen:0,sdWon:0},heroFlags:{},created:Date.now()};
+}
+function nextIdx(st,from,pred){var n=st.players.length;for(var k=1;k<=n;k++){var j=(from+k)%n;if(pred(st.players[j]))return j;}return -1;}
+function live(p){return !p.out;}
+function inPlay(p){return p.inHand&&!p.folded;}
+function actionable(p){return p.inHand&&!p.folded&&!p.allIn;}
+function needsToAct(st,p){return actionable(p)&&(!p.acted||p.bet<st.currentBet);}
+function potTotal(st){var t=0;st.players.forEach(function(p){t+=p.contrib;});return t;}
+function betsTotal(st){var t=0;st.players.forEach(function(p){t+=p.bet;});return t;}
+function put(p,x){x=Math.min(x,p.stack);p.stack-=x;p.bet+=x;p.contrib+=x;if(p.stack===0)p.allIn=true;return x;}
+function hh(st,line){st.hh.push(line);}
+
+function startHand(st,rng,deckOverride){
+  rng=rng||Math.random;
+  st.players.forEach(function(p){if(p.stack<=0){p.stack=0;p.out=true;}});
+  var lv=st.players.filter(live);
+  if(lv.length<2){st.phase='over';return false;}
+  st.handNo++;
+  if(st.button<0||st.players[st.button]===undefined) st.button=lv[Math.floor(rng()*lv.length)].i;
+  else st.button=nextIdx(st,st.button,live);
+  st.players.forEach(function(p){p.hole=[];p.folded=false;p.allIn=false;p.bet=0;p.contrib=0;p.acted=false;p.seenRaise=-1;p.inHand=!p.out;p.startStack=p.stack;p.mem={};p.shown=false;p.last='';});
+  var heads=lv.length===2;
+  st.sb=heads?st.button:nextIdx(st,st.button,live);
+  st.bb=nextIdx(st,st.sb,live);
+  st.deck=deckOverride?deckOverride.slice():shuffledDeck(rng);
+  if(deckOverride){ // fill rest of deck with unused cards
+    var used={};st.deck.forEach(function(c){used[c]=1;});for(var c=0;c<52;c++)if(!used[c])st.deck.push(c);
+  }
+  st.board=[];st.street='preflop';st.currentBet=0;st.minRaise=BB;st.raiseId=1;st.streetRaises=0;st.pfAggressor=-1;st.lastPfRaiseTo={};
+  st.streetAggressor=-1;st.prevAggressor=-1;st.runout=false;st.result=null;st.hh=[];st.heroFlags={};
+  // deal 2 cards each starting left of button (sb)
+  for(var rd=0;rd<2;rd++){var j=st.sb;for(var k=0;k<lv.length;k++){st.players[j].hole.push(st.deck.shift());j=nextIdx(st,j,live);}}
+  var sbP=st.players[st.sb],bbP=st.players[st.bb];
+  hh(st,'Hand #'+st.handNo+' \u2014 NLHE $0.10/$0.20');
+  hh(st,'Button: '+st.players[st.button].name+(heads?' (heads-up)':''));
+  hh(st,'Stacks: '+lv.map(function(p){return p.name+' '+fmt(p.stack);}).join(', '));
+  var s1=put(sbP,SB),b1=put(bbP,BB);
+  hh(st,sbP.name+' posts SB '+fmt(s1)+(sbP.allIn?' (all-in)':''));
+  hh(st,bbP.name+' posts BB '+fmt(b1)+(bbP.allIn?' (all-in)':''));
+  st.currentBet=Math.max(BB,s1,b1);
+  st.phase='betting';
+  st.toAct=nextToAct(st,st.bb);
+  if(roundComplete(st)){st.phase='roundEnd';st.toAct=-1;}
+  return true;
+}
+function nextToAct(st,from){return nextIdx(st,from,function(p){return needsToAct(st,p);});}
+function roundComplete(st){
+  var ip=st.players.filter(inPlay);
+  if(ip.length<=1)return true;
+  var acts=st.players.filter(actionable);
+  if(!acts.some(function(p){return needsToAct(st,p);}))return true;
+  if(acts.length<=1&&acts.every(function(p){return p.bet>=Math.max.apply(null,ip.map(function(q){return q.bet;}));}))return true;
+  return false;
+}
+function legal(st,i){
+  var p=st.players[i];
+  var actualMax=Math.max.apply(null,st.players.filter(inPlay).map(function(q){return q.bet;})); var target=st.players.some(function(q){return q!==p&&actionable(q);})?st.currentBet:actualMax; var toCall=Math.min(Math.max(0,target-p.bet),p.stack);
+  var others=st.players.some(function(q){return q!==p&&actionable(q);});
+  var maxTo=p.bet+p.stack;
+  var canRaise=p.stack>toCall&&(!p.acted||p.seenRaise!==st.raiseId||st.currentBet-p.bet>=st.minRaise)&&others;
+  var minTo=st.currentBet===0?Math.min(BB,maxTo):Math.min(st.currentBet+st.minRaise,maxTo);
+  return {toCall:toCall,canCheck:toCall===0,canRaise:canRaise,minTo:minTo,maxTo:maxTo,currentBet:st.currentBet,pot:potTotal(st)};
+}
+function act(st,i,a){
+  if(st.phase!=='betting'||st.toAct!==i)throw new Error('Not your turn: '+i+' toAct='+st.toAct+' phase='+st.phase);
+  var p=st.players[i],L=legal(st,i),ev={i:i,name:p.name,street:st.street,potBefore:L.pot};
+  var type=a.type;
+  if(type==='check'&&L.toCall>0)throw new Error('Cannot check facing '+L.toCall);
+  if(type==='raise'&&!L.canRaise)type=L.toCall>0?'call':'check';
+  if(type==='call'&&L.toCall===0)type='check';
+  if(type==='fold'){p.folded=true;ev.type='fold';p.last='Fold';hh(st,p.name+': folds');}
+  else if(type==='check'){ev.type='check';p.last='Check';hh(st,p.name+': checks');p.mem.checked=st.street;}
+  else if(type==='call'){var x=put(p,L.toCall);ev.type='call';ev.amt=x;ev.to=p.bet;ev.allIn=p.allIn;p.last=p.allIn?'All-in':'Call '+fmt(p.bet);hh(st,p.name+': calls '+fmt(x)+(p.allIn?' (all-in)':''));}
+  else if(type==='raise'){
+    var to=r10(a.to);if(to>L.maxTo)to=L.maxTo;if(to<L.minTo)to=L.minTo;
+    var wasBet=st.currentBet===0;
+    put(p,to-p.bet);
+    var by=to-st.currentBet;
+    if(by>=st.minRaise){st.minRaise=by;st.raiseId++;ev.full=true;}
+    st.currentBet=Math.max(st.currentBet,to);
+    st.streetRaises++;st.streetAggressor=i;
+    if(st.street==='preflop'){st.lastPfRaiseTo[i]=to;if(ev.full!==false)st.pfAggressor=i;}
+    ev.type=wasBet?'bet':'raise';ev.to=to;ev.amt=to;ev.allIn=p.allIn;
+    p.last=p.allIn?'All-in':(wasBet?'Bet ':'Raise ')+fmt(to);
+    hh(st,p.name+': '+(wasBet?'bets '+fmt(to):'raises to '+fmt(to))+(p.allIn?' (all-in)':''));
+  } else throw new Error('bad action '+type);
+  p.acted=true;p.seenRaise=st.raiseId;
+  if(i===0&&st.street==='preflop'){if(ev.type==='call'||ev.type==='raise'||ev.type==='bet')st.heroFlags.vpip=true;if(ev.type==='raise'||ev.type==='bet')st.heroFlags.pfr=true;}
+  if(roundComplete(st)){st.phase='roundEnd';st.toAct=-1;}
+  else st.toAct=nextToAct(st,i);
+  return ev;
+}
+function returnUncalled(st){
+  var ps=st.players.filter(function(p){return p.inHand;});
+  var top=null;ps.forEach(function(p){if(!top||p.bet>top.bet)top=p;});
+  if(!top||top.bet===0)return null;
+  var second=0;ps.forEach(function(p){if(p!==top&&p.bet>second)second=p.bet;});
+  var d=top.bet-second;
+  if(d>0){top.bet-=d;top.contrib-=d;top.stack+=d;if(top.stack>0)top.allIn=false;hh(st,'Uncalled bet ('+fmt(d)+') returned to '+top.name);return {i:top.i,amt:d};}
+  return null;
+}
+var NEXT={preflop:'flop',flop:'turn',turn:'river'};
+function proceed(st){
+  if(st.phase!=='roundEnd')throw new Error('proceed in phase '+st.phase);
+  var ev={uncalled:returnUncalled(st)};
+  st.players.forEach(function(p){p.bet=0;});
+  var ip=st.players.filter(inPlay);
+  if(ip.length===1){
+    var w=ip[0],tot=potTotal(st);w.stack+=tot;
+    hh(st,w.name+' wins '+fmt(tot)+' (no showdown)');
+    st.result={type:'fold',pot:tot,winners:[w.i],winnings:(function(){var o={};o[w.i]=tot;return o;})(),pots:[{amount:tot,winners:[w.i],label:'Pot'}],hands:{},board:st.board.slice()};
+    finishHand(st);ev.type='award';return ev;
+  }
+  if(st.street==='river'){showdown(st);ev.type='showdown';return ev;}
+  st.deck.shift(); // burn
+  var nx=NEXT[st.street],n=nx==='flop'?3:1;
+  for(var k=0;k<n;k++)st.board.push(st.deck.shift());
+  st.street=nx;st.currentBet=0;st.minRaise=BB;st.raiseId++;st.streetRaises=0;
+  st.prevAggressor=st.street==='flop'?st.pfAggressor:st.streetAggressor;st.streetAggressor=-1;
+  st.players.forEach(function(p){if(actionable(p))p.acted=false;p.last=p.folded?'Fold':(p.allIn?'All-in':'');});
+  hh(st,'*** '+nx.toUpperCase()+' *** ['+st.board.map(cardPretty).join(' ')+'] pot '+fmt(potTotal(st)));
+  ev.type='street';ev.street=nx;ev.cards=st.board.slice(-n);
+  if(roundComplete(st)){st.phase='roundEnd';st.toAct=-1;st.runout=true;}
+  else{st.phase='betting';st.toAct=nextToAct(st,st.button);}
+  return ev;
+}
+function computePots(st){
+  var c=st.players.map(function(p){return p.contrib;});
+  var cont=st.players.filter(inPlay),pots=[];
+  for(;;){
+    var lv=cont.filter(function(p){return c[p.i]>0;});if(!lv.length)break;
+    var level=Math.min.apply(null,lv.map(function(p){return c[p.i];})),amt=0;
+    st.players.forEach(function(q){var x=Math.min(c[q.i],level);amt+=x;c[q.i]-=x;});
+    pots.push({amount:amt,eligible:lv.map(function(p){return p.i;})});
+  }
+  var left=c.reduce(function(a,b){return a+b;},0);
+  if(left>0&&pots.length)pots[pots.length-1].amount+=left;
+  // merge consecutive pots with identical eligibility
+  var m=[];pots.forEach(function(pt){var l=m[m.length-1];if(l&&l.eligible.join()===pt.eligible.join())l.amount+=pt.amount;else m.push(pt);});
+  return m;
+}
+function showdown(st){
+  var cont=st.players.filter(inPlay),hands={};
+  cont.forEach(function(p){var s=evalHand(p.hole.concat(st.board));hands[p.i]={score:s,name:handName(s)};p.shown=true;
+    hh(st,p.name+' shows ['+p.hole.map(cardPretty).join(' ')+'] ('+hands[p.i].name+')');});
+  var pots=computePots(st),winnings={},n=st.players.length;
+  pots.forEach(function(pt,idx){
+    var best=-1;pt.eligible.forEach(function(i){if(hands[i].score>best)best=hands[i].score;});
+    var ws=pt.eligible.filter(function(i){return hands[i].score===best;});
+    // order winners clockwise from left of button for odd chips
+    ws.sort(function(a,b){return ((a-st.button-1+n)%n)-((b-st.button-1+n)%n);});
+    var units=pt.amount/10,each=Math.floor(units/ws.length),rem=units-each*ws.length;
+    ws.forEach(function(i,k){var amt=(each+(k<rem?1:0))*10;winnings[i]=(winnings[i]||0)+amt;st.players[i].stack+=amt;});
+    pt.winners=ws;pt.label=pots.length===1?'Pot':(idx===0?'Main pot':'Side pot '+idx);
+    hh(st,ws.map(function(i){return st.players[i].name;}).join(' & ')+(ws.length>1?' split ':' wins ')+pt.label.toLowerCase()+' '+fmt(pt.amount)+' with '+hands[ws[0]].name);
+  });
+  st.result={type:'showdown',pot:potTotal(st),pots:pots,winnings:winnings,hands:hands,board:st.board.slice(),runout:st.runout,
+    winners:Object.keys(winnings).map(Number)};
+  finishHand(st);
+}
+function finishHand(st){
+  st.phase='done';st.toAct=-1;
+  var hero=st.players[0];
+  if(hero.inHand){
+    st.stats.hands++;if(st.heroFlags.vpip)st.stats.vpip++;if(st.heroFlags.pfr)st.stats.pfr++;
+    var w=(st.result.winnings[0]||0);
+    if(w>0){st.stats.won++;if(st.result.pot>st.stats.biggest)st.stats.biggest=st.result.pot;}
+    if(st.result.type==='showdown'&&!hero.folded){st.stats.sdSeen++;if(w>0)st.stats.sdWon++;}
+    hh(st,'Max: '+(hero.hole.length?'['+hero.hole.map(cardPretty).join(' ')+'] ':'')+'net this hand '+fmtSigned(hero.stack-hero.startStack)+' (stack '+fmt(hero.stack)+')');
+  }
+  st.players.forEach(function(p){if(p.inHand&&p.stack===0){hh(st,p.name+' is busted ($0.00)');}});
+  st.histories.push(st.hh.join('\n'));
+  if(st.histories.length>200)st.histories.shift();
+}
+function chipTotal(st){var t=0,d=st.phase==='done';st.players.forEach(function(p){t+=p.stack+(d?0:p.contrib);});return t;}
+
+return {RANKS:RANKS,SUITS:SUITS,SYM:SYM,BB:BB,SB:SB,BUYIN:BUYIN,rankOf:rankOf,suitOf:suitOf,cardStr:cardStr,cardPretty:cardPretty,parseCard:parseCard,parseCards:parseCards,
+  fmt:fmt,fmtSigned:fmtSigned,r10:r10,evalHand:evalHand,handName:handName,shortHandName:shortHandName,decode:decode,straightHigh:straightHigh,shuffledDeck:shuffledDeck,
+  newSession:newSession,startHand:startHand,legal:legal,act:act,proceed:proceed,potTotal:potTotal,betsTotal:betsTotal,computePots:computePots,
+  inPlay:inPlay,actionable:actionable,nextIdx:nextIdx,chipTotal:chipTotal,roundComplete:roundComplete,returnUncalled:returnUncalled};
+})();
+if(typeof module!=='undefined'&&module.exports)module.exports=PokerEngine;
+else if(typeof globalThis!=='undefined')globalThis.PokerEngine=PokerEngine;
+if(typeof window!=='undefined')window.PokerEngine=PokerEngine;
+
+;
+/* GDR opponent AI: frozen copy of the trainer AI plus the same Jack/Jake
+   aliases and FT+/GDR scoped Lauren Alamo, Lauren Bauer, and Julie profiles
+   used by fast_chat/adapter.js. Tendencies are not retuned. */
+/* ===== Bot AI: rules-based with randomness ===== */
+var PokerAI = (function(E){
+'use strict';
+var BB=E.BB;
+// Hidden tendencies (never shown in UI)
+var P={
+  'Marshall': {open:8,  limp:99, call:8,  three:11, cbet:.55,barrel:.25,riverGive:.8, missBluff:0,  semi:.10,stab:.10,value:.60,big:.80,raise:.80,valueFreq:.75,respect:.12,callAdj:0,   passive:false,bigOnlyStrong:true},
+  'Molly':    {open:10, limp:5,  call:6,  three:13, cbet:.30,barrel:.10,riverGive:.9, missBluff:0,  semi:.03,stab:.05,value:.62,big:.82,raise:.84,valueFreq:.40,respect:.10,callAdj:0, passive:true, bigOnlyStrong:true},
+  'Jimmy':    {open:10, limp:1.5,call:1.5, three:11.5,cbet:.40,barrel:.20,riverGive:.7,missBluff:.10,semi:.10,stab:.20,value:.55,big:.78,raise:.82,valueFreq:.60,respect:.02,callAdj:.10, passive:false,raiseOnlyStrong:true},
+  'John':     {open:9.5,limp:4,  call:6,  three:12, cbet:.35,barrel:.10,riverGive:.9, missBluff:0,  semi:.03,stab:.05,value:.62,big:.80,raise:.80,valueFreq:.40,respect:.10,callAdj:.01, passive:true, raiseOnlyStrong:true},
+  'Will':     {open:9,  limp:6,  call:7,  three:12, cbet:.40,barrel:.15,riverGive:.85,missBluff:0,  semi:.05,stab:.05,value:.60,big:.82,raise:.85,valueFreq:.45,respect:.10,callAdj:0,   passive:true, bigPotStubborn:true},
+  'Lauren A': {open:6.5,limp:99, call:7,  three:10, cbet:.62,barrel:.40,riverGive:.6, missBluff:.15,semi:.30,stab:.25,value:.58,big:.78,raise:.75,valueFreq:.80,respect:.11,callAdj:0,   passive:false},
+  'Christian':{open:5,  limp:3,  call:5,  three:8.5,cbet:.72,barrel:.45,riverGive:.5, missBluff:.42,semi:.40,stab:.35,value:.55,big:.76,raise:.72,valueFreq:.80,respect:.06,callAdj:.03, passive:false},
+  'Mystery':  {open:3.5,limp:99, call:5,  three:8,  cbet:.86,barrel:.35,riverGive:.66,missBluff:.10,semi:.35,stab:.40,value:.56,big:.78,raise:.80,valueFreq:.85,respect:.06,callAdj:.02, passive:false,scareBarrel:.72,xrOnlyStrong:true}
+};
+var DEFAULT=P['Lauren A'];
+// Stickiness (calling-down) params. d3 = chen needed to continue vs a 3-bet as the opener; b4 = light 4-bet freq;
+// pair/draw = call freq vs a single flop/turn bet with a pair / draw; flt = in-position float freq; ovr = overcards call freq;
+// rv = river call-down freq with a pair vs a <=3/4-pot bet
+var K={
+  'Marshall': {d3:9.8,b4:0,  pair:.55,draw:.60,flt:.05,ovr:.05,rv:.30},
+  'Molly':    {d3:10, b4:0,   pair:.88,draw:.75,flt:.05,ovr:.10,rv:.60},
+  'Jimmy':    {d3:8,  b4:0,   pair:1,  draw:1,  flt:.50,ovr:.60,rv:.85},
+  'John':     {d3:10, b4:0,   pair:.88,draw:.75,flt:.05,ovr:.10,rv:.55},
+  'Will':     {d3:10, b4:0,   pair:.92,draw:.75,flt:.05,ovr:.08,rv:.60},
+  'Lauren A': {d3:8.9,b4:.03, pair:.62,draw:.75,flt:.15,ovr:.12,rv:.35},
+  'Christian':{d3:6.4,b4:.05, pair:.75,draw:.85,flt:.22,ovr:.18,rv:.45},
+  'Mystery':  {d3:5.0, b4:.06, pair:.70,draw:.85,flt:.25,ovr:.18,rv:.35}
+};
+var KD=K['Lauren A'];
+function inPos(st,i){var n=st.players.length,o=function(j){return (j-st.button-1+n)%n;};
+  return st.players.every(function(q){return q.i===i||!E.inPlay(q)||o(q.i)<o(i);});}
+function pairInfo(hole,board){ // does a hole card make a pair+ (vs board alone)?
+  var sc=E.evalHand(hole.concat(board)),cat=E.decode(sc).cat;
+  var bc=board.length>=5?E.decode(E.evalHand(board)).cat:(function(){var r={},m=0;board.forEach(function(c){r[c>>2]=(r[c>>2]||0)+1;m=Math.max(m,r[c>>2]);});return m>=3?3:m===2?1:0;})();
+  var top=Math.max.apply(null,board.map(function(c){return c>>2;}));
+  var over=hole.every(function(c){return (c>>2)>top;});
+  return {pair:cat>=1&&cat>bc,cat:cat,over:over};
+}
+function chen(h){
+  var a=h[0]>>2,b=h[1]>>2,hi=Math.max(a,b),lo=Math.min(a,b);
+  var val=function(r){return r===12?10:r===11?8:r===10?7:r===9?6:(r+2)/2;};
+  var s=val(hi);
+  if(a===b){s=Math.max(5,s*2);return s;}
+  if((h[0]&3)===(h[1]&3))s+=2;
+  var gap=hi-lo-1;
+  s-=gap===0?0:gap===1?1:gap===2?2:gap===3?4:5;
+  if(gap<=1&&hi<10)s+=1;
+  return Math.ceil(s);
+}
+function equity(hole,board,nOpp,iters,rng){
+  nOpp=Math.max(1,Math.min(nOpp,6));
+  var used={},rest=[],i;hole.concat(board).forEach(function(c){used[c]=1;});
+  for(i=0;i<52;i++)if(!used[i])rest.push(i);
+  var need=5-board.length,win=0,R=rest.length;
+  for(var it=0;it<iters;it++){
+    var take=nOpp*2+need;
+    for(i=0;i<take;i++){var j=i+Math.floor(rng()*(R-i));var t=rest[i];rest[i]=rest[j];rest[j]=t;}
+    var b=board.concat(rest.slice(nOpp*2,nOpp*2+need));
+    var my=E.evalHand(hole.concat(b)),best=-1,ties=0;
+    for(var o=0;o<nOpp;o++){var s=E.evalHand([rest[o*2],rest[o*2+1]].concat(b));if(s>best){best=s;ties=0;}else if(s===best)ties++;}
+    if(my>best)win+=1;else if(my===best)win+=1/(ties+2);
+  }
+  return win/iters;
+}
+function drawInfo(hole,board){
+  if(board.length<3||board.length>=5)return {flush:false,oesd:false,gut:false,any:false};
+  var all=hole.concat(board),sc=[0,0,0,0],bsc=[0,0,0,0];
+  all.forEach(function(c){sc[c&3]++;});board.forEach(function(c){bsc[c&3]++;});
+  var flush=false;for(var s=0;s<4;s++)if(sc[s]===4&&bsc[s]<4&&hole.some(function(c){return (c&3)===s;}))flush=true;
+  var mask=0;all.forEach(function(c){mask|=1<<(c>>2);});
+  var outs=0;if(E.straightHigh(mask)<0){for(var r=0;r<13;r++){if(!((mask>>r)&1)&&E.straightHigh(mask|(1<<r))>=0)outs++;}}
+  return {flush:flush,oesd:outs>=2,gut:outs===1,any:flush||outs>=2};
+}
+function scare(board){
+  if(board.length<4)return false;
+  var c=board[board.length-1],prev=board.slice(0,-1),r=c>>2;
+  var maxPrev=Math.max.apply(null,prev.map(function(x){return x>>2;}));
+  var sameSuit=board.filter(function(x){return (x&3)===(c&3);}).length;
+  return (r>maxPrev&&r>=10)||sameSuit===3||sameSuit===4;
+}
+function seatDist(st,i){ // 0=BTN,1=SB...
+  var lv=st.players.filter(function(p){return !p.out;}).map(function(p){return p.i;});
+  var bi=lv.indexOf(st.button),ii=lv.indexOf(i);return {d:(ii-bi+lv.length)%lv.length,n:lv.length};
+}
+function sizeTo(st,p,L,to){
+  to=E.r10(to);if(to<L.minTo)to=L.minTo;if(to>L.maxTo)to=L.maxTo;
+  if(to>=0.75*L.maxTo)to=L.maxTo; // commit
+  return {type:'raise',to:to};
+}
+function passOrFold(L){return L.toCall>0?{type:'fold'}:{type:'check'};}
+function decide(st,i,rng){
+  rng=rng||Math.random;
+  try{return st.street==='preflop'?preflop(st,i,rng):postflop(st,i,rng);}
+  catch(e){var L=E.legal(st,i);return L.toCall>0?{type:'fold'}:{type:'check'};}
+}
+function preflop(st,i,rng){
+  var p=st.players[i],pr=P[p.name]||DEFAULT,L=E.legal(st,i),ch=chen(p.hole);
+  var sd=seatDist(st,i),bonus=0;
+  if(sd.n>=4){if(sd.d===0)bonus=1.5;else if(sd.d===sd.n-1)bonus=1.2;else if(sd.d===sd.n-2)bonus=.5;else if(sd.d===1)bonus=0;else if(sd.d===2)bonus=st.streetRaises?0.7:0;else if(sd.n>=7&&sd.d<=4)bonus=-.6;}
+  else bonus=1.5; // short-handed: play wider
+  var s=ch+bonus+(rng()-.5)*1.6;
+  var stackBB=(p.stack+p.bet)/BB;
+  if(st.streetRaises===0){
+    var limpers=st.players.filter(function(q){return q.inHand&&!q.folded&&q.i!==st.bb&&q.i!==st.sb&&q.bet>=BB;}).length;
+    if(s>=pr.open&&L.canRaise){var mult=pr===P.Mystery?2.5+rng()*.5:3;return sizeTo(st,p,L,BB*mult+limpers*BB);}
+    if(L.toCall===0)return {type:'check'};
+    if(s>=pr.limp||(i===st.sb&&s>=pr.limp-1.5))return {type:'call'};
+    return {type:'fold'};
+  }
+  var raiseBB=st.currentBet/BB;
+  var pen=Math.min(6,Math.max(0,Math.log(raiseBB/3)/Math.LN2*1.6));
+  if(stackBB<=20)pen=Math.max(0,pen-1.5);
+  if(st.streetRaises===1){
+    if(s>=pr.three+pen*.5&&L.canRaise){var m=(sd.d===1||sd.d===2)?3.5:3;return sizeTo(st,p,L,st.currentBet*m);}
+    if(s>=pr.call+pen)return {type:'call'};
+    return passOrFold(L);
+  }
+  // facing exactly a 3-bet: continue with a playable part of the opening range (looser in position / for wide openers)
+  if(st.streetRaises===2){
+    var k=K[p.name]||KD,ip=inPos(st,i)?1:0,opener=st.lastPfRaiseTo[i]!==undefined;
+    var size=st.currentBet/Math.max(BB,(st.lastPfRaiseTo[i]||BB));
+    var pen3=Math.max(0,(size-3)*1.2)+(opener?0:1.5)+(stackBB<=30?-0.5:0)+(st.currentBet>=0.35*(p.stack+p.bet)?2:0);
+    var s3=ch+ip*1.2+(rng()-.5)*1.4;
+    if(ch>=13||(ch>=11&&rng()<.45)||(k.b4&&ip&&rng()<k.b4)){if(L.canRaise)return sizeTo(st,p,L,st.currentBet*2.3);return {type:'call'};}
+    if(s3>=k.d3+pen3)return {type:'call'};
+    return passOrFold(L);
+  }
+  // facing 4-bet or more
+  if(ch>=13||(ch>=12&&rng()<.6)){if(L.canRaise&&st.streetRaises<4)return sizeTo(st,p,L,st.currentBet*2.3);return {type:'call'};}
+  if(ch+(rng()-.5)>=Math.max(9,pr.call+2)+pen*.6)return {type:'call'};
+  return passOrFold(L);
+}
+function postflop(st,i,rng){
+  var p=st.players[i],pr=P[p.name]||DEFAULT,L=E.legal(st,i);
+  var opps=st.players.filter(function(q){return E.inPlay(q)&&q.i!==i;}).length;
+  var eq=equity(p.hole,st.board,opps,240,rng);
+  var pot=L.pot,dr=drawInfo(p.hole,st.board);
+  if(dr.any)p.mem.hadDraw=true;
+  var river=st.street==='river',missed=river&&p.mem.hadDraw&&eq<.35;
+  var isPFA=st.pfAggressor===i,wasAgg=st.prevAggressor===i;
+  var eqB=Math.pow(eq,1.25+0.1*Math.max(0,opps-1));
+  var strong=eqB>=pr.big,value=eqB>=pr.value;
+  // multiway adjustment: equity vs random hands is already multiway-aware
+  if(L.toCall===0){
+    var f=0;
+    if(strong){if(rng()<(pr.passive?.55:.8))f=pr.bigOnlyStrong||pr.passive?.7+rng()*.3:.55+rng()*.35;}
+    else if(value){if(rng()<pr.valueFreq)f=(pr.bigOnlyStrong||pr.passive)?.33+rng()*.15:.4+rng()*.25;}
+    else{
+      if(st.street==='flop'&&isPFA&&rng()<pr.cbet*(opps>=3?.6:1))f=.33+rng()*.2;
+      else if(st.street==='turn'&&wasAgg&&(pr.scareBarrel?(scare(st.board)&&rng()<pr.scareBarrel)||rng()<.2:rng()<pr.barrel))f=.5+rng()*.25;
+      else if(river&&wasAgg&&rng()>pr.riverGive)f=.6+rng()*.2;
+      else if(missed&&rng()<pr.missBluff)f=.6+rng()*.2;
+      else if(dr.any&&rng()<pr.semi)f=.45+rng()*.2;
+      else if(opps===1&&rng()<pr.stab*(st.street==='river'?.5:1))f=.35+rng()*.15;
+    }
+    if(f>0&&L.canRaise)return sizeTo(st,p,L,Math.max(BB,pot*f));
+    return {type:'check'};
+  }
+  var potOdds=L.toCall/(pot+L.toCall);
+  var ratio=L.toCall/Math.max(BB,pot-E.betsTotal(st));
+  // equity is vs random hands; discount it for the aggression we face (bets/raises narrow villain's range)
+  var kx=0.45+pr.respect*4,ex=1+kx*(st.streetRaises*1.0+Math.min(ratio,2)*0.45)*(river?1.25:1);
+  if(pr.bigPotStubborn&&pot>=40*BB)ex=1+(ex-1)*0.6;
+  var eqR=Math.pow(eq,ex);
+  var eqA=eqR;
+  var adj=pr.callAdj;
+  if(pr.bigPotStubborn&&pot>=40*BB)adj+=.12;
+  if(dr.any&&!river)adj+=dr.flush?.06:.04;
+  var raiseThr=pr.raise;if(pr.bigPotStubborn&&pot>=40*BB)raiseThr-=.05;
+  if(eqR>=raiseThr&&L.canRaise&&st.streetRaises<4&&rng()<(pr.passive?.6:.85))
+    return sizeTo(st,p,L,st.currentBet+(pot+L.toCall)*(.6+rng()*.3));
+  if(!pr.raiseOnlyStrong&&!pr.passive&&!pr.xrOnlyStrong&&dr.any&&st.street==='flop'&&L.canRaise&&st.streetRaises<2&&rng()<pr.semi*.35)
+    return sizeTo(st,p,L,st.currentBet*3);
+  if(eqA+adj>=potOdds)return {type:'call'};
+  // stickiness: call down with pairs / draws, float in position (calls only; aggression signals unchanged)
+  var k=K[p.name]||KD,pi=pairInfo(p.hole,st.board),ip=inPos(st,i),big=pr.bigPotStubborn&&pot>=40*BB;
+  if(st.streetRaises===1&&!river){
+    var cap=big?2.5:1.1; // don't station off vs overbets
+    if(ratio<=cap){
+      if(pi.pair&&rng()<k.pair*(ratio>0.8?0.75:1))return {type:'call'};
+      if(dr.any&&rng()<k.draw)return {type:'call'};
+      if(dr.gut&&st.street==='flop'&&ratio<=0.6&&rng()<k.draw*.5)return {type:'call'};
+      if(st.street==='flop'&&ip&&ratio<=0.75&&rng()<k.flt)return {type:'call'};
+      if(st.street==='flop'&&pi.over&&ratio<=0.75&&rng()<k.ovr)return {type:'call'};
+    }
+  } else if(st.streetRaises===1&&river){
+    if(pi.pair&&(ratio<=0.75||big)&&rng()<k.rv*(big?1.3:1))return {type:'call'};
+  } else if(big&&pi.pair&&pi.cat>=2&&rng()<.5)return {type:'call'}; // Will: two pair+ in a big pot facing a raise
+  return {type:'fold'};
+}
+return {decide:decide,sticky:K,inPos:inPos,pairInfo:pairInfo,chen:chen,equity:equity,drawInfo:drawInfo,profiles:P};
+})(typeof PokerEngine!=='undefined'?PokerEngine:require('./engine.js'));
+
+function installJackJake(AI){
+  AI.profiles.Jack=Object.assign({},AI.profiles['Lauren A'],{open:8,three:11,missBluff:.1,semi:.3});
+  AI.sticky.Jack=Object.assign({},AI.sticky['Lauren A']);
+  AI.profiles.Jake=Object.assign({},AI.profiles.Christian,{open:5.5,three:8,call:4.5});
+  AI.sticky.Jake=Object.assign({},AI.sticky.Christian);
+}
+function installGdrProfiles(AI){
+  installJackJake(AI);
+  AI.profiles['Lauren Bauer']=Object.assign({},AI.profiles.Molly,{open:10.5,limp:7,call:7.5,three:13,missBluff:0,semi:0,stab:.01,valueFreq:.35,passive:true,raiseOnlyStrong:true});
+  AI.sticky['Lauren Bauer']=Object.assign({},AI.sticky.Molly,{pair:.65,draw:.75,flt:0,ovr:.02,rv:.40});
+  AI.profiles['Lauren Alamo']=Object.assign({},AI.profiles['Lauren A'],{open:4,call:3,limp:2,missBluff:.25,semi:.40,callAdj:.08});
+  AI.sticky['Lauren Alamo']=Object.assign({},AI.sticky['Lauren A'],{pair:.85,draw:.95,flt:.25,rv:.55});
+  AI.profiles.Julie=Object.assign({},AI.profiles.Will,{open:10,limp:8,call:8,three:13,missBluff:0,semi:0,stab:.02,passive:true,raiseOnlyStrong:true,bigPotStubborn:false});
+  AI.sticky.Julie=Object.assign({},AI.sticky.Will,{pair:.60,draw:.90,flt:0,ovr:.02,rv:.35});
+  AI.profiles['Jake Phillips']=Object.assign({},AI.profiles.Jake);
+  AI.sticky['Jake Phillips']=Object.assign({},AI.sticky.Jake);
+}
+installGdrProfiles(PokerAI);
+PokerAI.installGdrProfiles=installGdrProfiles;
+PokerAI.installJackJake=installJackJake;
+
+if(typeof module!=='undefined'&&module.exports)module.exports=PokerAI;
+else if(typeof globalThis!=='undefined')globalThis.PokerAI=PokerAI;
+if(typeof window!=='undefined')window.PokerAI=PokerAI;
+
+;
+/* GDR public action menu. Matches the live session policy:
+   always offer $0.80 when legal; offer a pot option (current bet + pot +
+   call); at most six options; custom amounts allowed; all-in marked
+   danger; when an opponent is the shorter stack, label all-in
+   "Raise/Bet $X (puts NAME all-in)"; merge pot into all-in when the pot
+   size meets or exceeds that stack; drop a filler (minimum or ~1/3 pot)
+   if needed to stay at six; "Raise to" when facing a bet or opening
+   preflop, "Bet" when opening a postflop street. */
+(function(root){
+'use strict';
+var E = (typeof PokerEngine!=='undefined') ? PokerEngine : require('./engine.js');
+
+function money(n){return E.fmt(n);}
+
+function shorterCovered(st, heroMaxTo){
+  var hero = st.players[0], shortest=null;
+  st.players.forEach(function(q){
+    if(q===hero || !E.inPlay(q)) return;
+    var total=q.bet+q.stack;
+    if(total<heroMaxTo && (!shortest || total<shortest.total))
+      shortest={name:q.name, bet:q.bet, stack:q.stack, total:total};
+  });
+  return shortest;
+}
+
+function lastAggressor(st){
+  if(st.toAct!==0 || st.phase!=='betting') return null;
+  var i=st.streetAggressor, ps=st.players||[];
+  if(!Number.isInteger(i) || i<0 || i>=ps.length) return null;
+  var p=ps[i], bet=p.bet, last=p.last||'', kind;
+  if(last.indexOf('Bet')===0) kind='Bet';
+  else if(last.indexOf('Raise')===0) kind='Raised';
+  else if(st.street==='preflop') kind='Raised';
+  else kind = ps.some(function(q){return q!==p && q.bet>0 && q.bet<bet;}) ? 'Raised' : 'Bet';
+  return {name:p.name, i:i, label:kind+' '+money(bet), bet:bet};
+}
+
+function widget(st){
+  if(st.phase!=='betting' || st.toAct!==0) return null;
+  var p=st.players[0], L=E.legal(st,0), opts=[];
+  if(L.toCall){
+    var callAll=L.toCall===p.stack;
+    opts.push({label:'Fold', action:'fold'});
+    opts.push({label:(callAll?'Call all-in ':'Call ')+money(L.toCall), action:'call', ...(callAll?{danger:true}:{})});
+  } else {
+    opts.push({label:'Check', action:'check'});
+  }
+  if(L.canRaise){
+    var openingPostflop = st.currentBet===0;
+    var verb = openingPostflop ? 'Bet' : 'Raise to';
+    var potTo = E.r10(st.currentBet + L.pot + L.toCall);
+    var shorter = shorterCovered(st, L.maxTo);
+    var coverTo = shorter ? shorter.total : L.maxTo;
+    var potMerges = potTo>=coverTo;
+    var cands=[];
+    function add(to, label, kind){
+      to=E.r10(to);
+      if(to>=L.minTo && to<L.maxTo && to<coverTo && !cands.some(function(x){return x.to===to;}))
+        cands.push({to:to, label:label, kind:kind});
+    }
+    if(openingPostflop){
+      add(L.minTo, 'Bet '+money(Math.max(L.minTo, E.r10(L.minTo)))+' (minimum)', 'min');
+      var third=Math.max(L.minTo, E.r10(L.pot/3));
+      add(third, 'Bet '+money(third)+' (~1/3 pot)', 'third');
+      add(80, 'Bet $0.80', 'eighty');
+      var half=Math.max(L.minTo, E.r10(L.pot/2));
+      add(half, 'Bet '+money(half)+' (~1/2 pot)', 'half');
+      if(!potMerges) {
+        var potLabel='Bet '+money(potTo)+' (pot)';
+        if(potTo===80) potLabel='Bet $0.80 (pot)';
+        add(potTo, potLabel, 'pot');
+      }
+    } else {
+      add(L.minTo, 'Raise to '+money(L.minTo)+' (minimum)', 'min');
+      add(80, 'Raise to $0.80', 'eighty');
+      if(!potMerges){
+        var pLab='Raise to '+money(potTo)+' (pot)';
+        if(potTo===80) pLab='Raise to $0.80 (pot)';
+        add(potTo, pLab, 'pot');
+      }
+    }
+    // Relabel $0.80 if it coincides with pot (already handled) or min.
+    cands.forEach(function(c){
+      if(c.kind!=='eighty' && c.to===80 && c.label.indexOf('$0.80')===-1)
+        c.label=c.label.replace(/\$[0-9.]+/, '$0.80');
+    });
+    // If $0.80 is legal and somehow missing (e.g. equaled a dropped size), re-add.
+    if(80>=L.minTo && 80<L.maxTo && 80<coverTo && !cands.some(function(c){return c.to===80;}))
+      add(80, verb+' $0.80', 'eighty');
+
+    var room=6-opts.length-1; // leave a slot for all-in
+    function dropFiller(){
+      var order=['min','third','half'];
+      for(var i=0;i<order.length;i++){
+        var k=order[i], idx=cands.findIndex(function(c){return c.kind===k;});
+        // Never drop $0.80 or pot to make room.
+        if(idx>=0){cands.splice(idx,1);return true;}
+      }
+      return false;
+    }
+    while(cands.length>room){ if(!dropFiller()) break; }
+
+    cands.forEach(function(t){
+      opts.push({label:t.label, action:(openingPostflop?'bet ':'raise ')+(t.to/100).toFixed(2), to:t.to});
+    });
+
+    var allinLabel, allinTo=L.maxTo;
+    if(shorter){
+      allinLabel=verb+' '+money(coverTo)+' (puts '+shorter.name+' all-in)';
+      if(potMerges) allinLabel=verb+' '+money(coverTo)+' (pot, puts '+shorter.name+' all-in)';
+    } else {
+      allinLabel='All-in '+money(p.stack);
+      if(potMerges) allinLabel='All-in '+money(p.stack)+' (pot)';
+    }
+    opts.push({label:allinLabel, action:'allin', danger:true, to:allinTo});
+  }
+  var agg=lastAggressor(st);
+  return {
+    prompt:'Your action ('+(L.toCall?money(L.toCall)+' to call, ':'')+'pot '+money(L.pot)+')',
+    options:opts.slice(0,6),
+    allowCustom:true,
+    minRaiseTo:L.canRaise?money(L.minTo):null,
+    maxRaiseTo:L.canRaise?money(L.maxTo):null,
+    canRaise:!!L.canRaise,
+    toCall:L.toCall,
+    pot:L.pot,
+    minTo:L.canRaise?L.minTo:null,
+    maxTo:L.canRaise?L.maxTo:null,
+    lastAggressor:agg
+  };
+}
+
+function parseCustom(text, st){
+  // Typed amounts are raise-to or bet totals, e.g. "$1.20" or "1.20".
+  if(text==null) throw new Error('Empty amount');
+  var raw=String(text).trim().toLowerCase().replace(/\$/g,'').replace(/,/g,'');
+  if(!raw) throw new Error('Empty amount');
+  if(['fold','check','call','allin','all-in','all in'].indexOf(raw)>=0){
+    if(raw==='all-in'||raw==='all in') raw='allin';
+    return {type:raw};
+  }
+  var n=Number(raw);
+  if(!Number.isFinite(n) || n<0) throw new Error('Invalid amount');
+  var cents=Math.round(n*100);
+  if(cents!==Math.round(cents) || cents%10) throw new Error('Amounts must be exact $0.10 increments');
+  var L=E.legal(st,0);
+  if(st.currentBet===0) return {type:'bet', cents:cents};
+  return {type:'raise', cents:cents};
+}
+
+function actionFrom(input, st){
+  var p=st.players[0], L=E.legal(st,0);
+  if(input.type==='allin') return L.canRaise?{type:'raise', to:L.maxTo}:{type:'call'};
+  if(input.type==='bet' && st.currentBet!==0) throw new Error('Facing a bet: use raise-to');
+  if(input.type==='bet' || input.type==='raise') return {type:'raise', to:input.cents};
+  return {type:input.type};
+}
+
+var api={widget:widget, lastAggressor:lastAggressor, shorterCovered:shorterCovered, parseCustom:parseCustom, actionFrom:actionFrom, money:money};
+if(typeof module!=='undefined'&&module.exports) module.exports=api;
+else { root.GdrWidget=api; }
+if(typeof window!=='undefined') window.GdrWidget=api;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+;
+/* GDR session driver: same start/step contract as fast_chat/adapter.js
+   (locked deals, chip validation, uncalled-bet refunds before reveal,
+   all-in reveal, showdown side pots and odd dimes, busted players out,
+   no rebuys, hero bust or 24-hand stop). Runs entirely in-process. */
+(function(root){
+'use strict';
+var E = (typeof PokerEngine!=='undefined') ? PokerEngine : require('./engine.js');
+var AI = (typeof PokerAI!=='undefined') ? PokerAI : require('./ai.js');
+var W = (typeof GdrWidget!=='undefined') ? GdrWidget : require('./widget.js');
+
+var REGULARS=['Max','Christian','Marshall','Molly','Lauren Alamo','Jack'];
+var EXTRAS=['Jimmy','Lauren Bauer','Will','Julie','John'];
+var BENCHED=['Jake','Jake Phillips'];
+var HAND_LIMIT=24, BUYIN=2500, SCHEMA='fast-chat-v1', EXPORT_SCHEMA='gdr-html-export-v1';
+
+function systemRng(){
+  if(typeof crypto!=='undefined' && crypto.getRandomValues){
+    return function(){ var u=new Uint32Array(1); crypto.getRandomValues(u); return u[0]/0x100000000; };
+  }
+  throw new Error('Need a CSPRNG (Web Crypto or Node crypto)');
+}
+function nodeSystemRng(){
+  try{
+    var c=require('crypto');
+    return function(){ return c.randomInt(0,0x100000000)/0x100000000; };
+  }catch(e){ return systemRng(); }
+}
+function defaultRng(){
+  if(typeof process!=='undefined' && process.versions && process.versions.node) return nodeSystemRng();
+  return systemRng();
+}
+function seededRng(seed){
+  var s=seed>>>0;
+  return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; };
+}
+function shuffleInPlace(arr, rng){
+  for(var i=arr.length-1;i>0;i--){ var j=Math.floor(rng()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
+  return arr;
+}
+function sample(arr, k, rng){
+  var a=arr.slice(); shuffleInPlace(a, rng); return a.slice(0,k);
+}
+function drawSeats(rng){
+  rng=rng||defaultRng();
+  return REGULARS.concat(sample(EXTRAS, 3, rng));
+}
+
+var RANKS='23456789TJQKA', SUITS='shdc';
+function freezeDeals(names, limit, rng){
+  rng=rng||defaultRng();
+  var valid=[], r, s, plans=[], h;
+  for(r=0;r<RANKS.length;r++) for(s=0;s<SUITS.length;s++) valid.push(RANKS[r]+SUITS[s]);
+  for(h=0;h<limit;h++){
+    var deck=valid.slice();
+    // Match Python: sorted(valid) then SystemRandom.shuffle, then pop.
+    deck.sort();
+    shuffleInPlace(deck, rng);
+    var hands={};
+    names.forEach(function(n){ hands[n]=[deck.pop(), deck.pop()]; });
+    var burns=[deck.pop(),deck.pop(),deck.pop()];
+    var board=[deck.pop(),deck.pop(),deck.pop(),deck.pop(),deck.pop()];
+    plans.push({hands:hands, board:board, burns:burns, tail:deck, focus:null});
+  }
+  return plans;
+}
+
+function validate(s){
+  var st=s.engine;
+  if(E.chipTotal(st)!==s.totalCents) throw new Error('Chip conservation failed');
+  st.players.forEach(function(p){
+    ['stack','contrib','bet'].forEach(function(k){
+      if(!Number.isInteger(p[k])||p[k]<0||p[k]%10) throw new Error('Invalid dime accounting '+k);
+    });
+  });
+  var cards=st.players.flatMap(function(p){return p.hole;}).concat(st.board, st.deck);
+  if(new Set(cards).size!==cards.length || cards.some(function(c){return !Number.isInteger(c)||c<0||c>51;}))
+    throw new Error('Duplicate/invalid cards');
+}
+
+function strictAct(st,i,a){
+  var L=E.legal(st,i);
+  if(['fold','check','call','raise'].indexOf(a.type)<0) throw new Error('Unknown action');
+  if(a.type==='check'&&!L.canCheck) throw new Error('Cannot check');
+  if(a.type==='call'&&L.toCall===0) throw new Error('Nothing to call; check instead');
+  if(a.type==='raise'&&(!L.canRaise||!Number.isInteger(a.to)||a.to%10||a.to<L.minTo||a.to>L.maxTo))
+    throw new Error('Illegal raise target or betting not reopened');
+  return E.act(st,i,a);
+}
+
+function lockedDeck(s){
+  var st=s.engine, plan=s.deals[st.handNo], live=st.players.filter(function(p){return p.stack>0;});
+  var next=function(i){ do{i=(i+1)%st.players.length;}while(st.players[i].stack<=0); return i; };
+  var btn=st.button<0?s.initialButton:next(st.button), sb=live.length===2?btn:next(btn), order=[], i=sb;
+  do{order.push(i);i=next(i);}while(i!==sb);
+  var deck=[], r, j;
+  for(r=0;r<2;r++) for(j=0;j<order.length;j++) deck.push(E.parseCard(plan.hands[st.players[order[j]].name][r]));
+  deck.push(E.parseCard(plan.burns[0]));
+  plan.board.slice(0,3).forEach(function(c){deck.push(E.parseCard(c));});
+  deck.push(E.parseCard(plan.burns[1]), E.parseCard(plan.board[3]), E.parseCard(plan.burns[2]), E.parseCard(plan.board[4]));
+  var used=new Set(deck);
+  plan.tail.map(E.parseCard).filter(function(c){return !used.has(c);}).forEach(function(c){deck.push(c);});
+  Object.values(plan.hands).flat().map(E.parseCard).forEach(function(c){ if(deck.indexOf(c)<0) deck.push(c); });
+  if(deck.length!==52 || new Set(deck).size!==52) throw new Error('Bad locked deal');
+  return deck;
+}
+
+function begin(s, rng){
+  var d=lockedDeck(s);
+  if(s.engine.button<0){
+    var prior=(s.initialButton-1+s.engine.players.length)%s.engine.players.length;
+    s.engine.button=prior;
+  }
+  E.startHand(s.engine, rng||defaultRng(), d);
+  validate(s);
+}
+
+function heroHandName(hole, board){
+  var n=E.handName(E.evalHand(hole.concat(board)));
+  return /-high$/.test(n)&&!/^(Straight|Flush)/.test(n)?'High card, '+n.replace(/-high$/,'') : n;
+}
+
+function publicState(st){
+  var hero=st.players[0], done=st.phase==='done';
+  var L=st.toAct===0&&st.phase==='betting'?E.legal(st,0):null;
+  var out={
+    hand:st.handNo, street:st.street, phase:st.phase,
+    button:st.players[st.button].name,
+    smallBlind:st.players[st.sb].name,
+    bigBlind:st.players[st.bb].name,
+    hero:hero.name,
+    hole:hero.hole.map(E.cardStr),
+    board:st.board.map(E.cardStr),
+    pot:W.money(done?0:E.potTotal(st)),
+    stack:W.money(hero.stack),
+    toCall:L?W.money(L.toCall):null,
+    stacks:Object.fromEntries(st.players.map(function(p){return [p.name, W.money(p.stack)];})),
+    shown:Object.fromEntries(st.players.filter(function(p){return p.shown&&!p.folded;}).map(function(p){return [p.name, p.hole.map(E.cardStr)];})),
+    potTiers:done?[]:E.computePots(st).map(function(p){return {amount:W.money(p.amount), eligible:p.eligible.map(function(i){return st.players[i].name;})};}),
+    lastAggressor:W.lastAggressor(st),
+    heroHand:(hero.hole&&hero.hole.length===2)?heroHandName(hero.hole, st.board):null,
+    livePlayers:st.players.filter(function(p){return !p.out && (done?p.stack>0:true);}).map(function(p){return p.name;})
+  };
+  if(done) out.result=st.result;
+  return out;
+}
+
+function snapshotMenu(w){
+  if(!w) return null;
+  return {
+    prompt:w.prompt,
+    options:w.options.map(function(o){return {label:o.label, action:o.action, danger:!!o.danger};}),
+    allowCustom:!!w.allowCustom,
+    minRaiseTo:w.minRaiseTo,
+    maxRaiseTo:w.maxRaiseTo,
+    canRaise:!!w.canRaise,
+    toCall:w.toCall,
+    pot:w.pot,
+    lastAggressor:w.lastAggressor
+  };
+}
+
+function drive(s, input, rng, mode){
+  rng=rng||s.rng||defaultRng();
+  if(typeof AI.installGdrProfiles==='function') AI.installGdrProfiles(AI);
+  var st=s.engine, events=[], audit=[], chunks=[], lines=[], decision=null;
+  var capture=function(kind){
+    var snap=JSON.parse(JSON.stringify(st));
+    var last=events[events.length-1];
+    if(last&&last.state.handNo===st.handNo&&last.state.street===st.street&&last.kind==='street'&&kind==='street') last.state=snap;
+    else events.push({kind:kind, state:snap, board:st.board.map(E.cardStr), pot:E.potTotal(st), street:st.street, hand:st.handNo});
+  };
+  var record=function(fn){ var n=st.hh.length, ret=fn(); var added=st.hh.slice(n); lines.push.apply(lines, added); return ret; };
+
+  if(mode==='next'){
+    if(!s.awaitingNext||s.complete) throw new Error('Not waiting for the next hand');
+    s.awaitingNext=false;
+    begin(s, rng);
+    st.chatRevealed=false;
+    lines.push.apply(lines, st.hh);
+    capture('street');
+  } else if(input){
+    if(s.awaitingNext) throw new Error('The previous hand is finished; deal the next hand first');
+    if(st.toAct!==0||st.phase!=='betting') throw new Error('Not awaiting hero');
+    // Record the pre-action decision point (menu Max was shown) before acting.
+    var preMenu=W.widget(st);
+    var prePublic=publicState(st);
+    var prePrior=st.hh.slice();
+    var ev=record(function(){return strictAct(st,0,W.actionFrom(input,st));});
+    audit.push(ev);
+    decision={
+      hand:prePublic.hand, street:prePublic.street, actionIndex:null,
+      hole:prePublic.hole, board:prePublic.board,
+      pot:prePublic.pot, toCall:prePublic.toCall, stack:prePublic.stack,
+      stacks:prePublic.stacks, button:prePublic.button,
+      smallBlind:prePublic.smallBlind, bigBlind:prePublic.bigBlind,
+      priorActions:prePrior, menu:snapshotMenu(preMenu),
+      action:input, actionEvent:ev,
+      lastAggressor:prePublic.lastAggressor
+    };
+    s._decisionCount=(s._decisionCount||0)+1;
+    decision.actionIndex=s._decisionCount;
+    s.decisions.push(decision);
+  } else {
+    begin(s, rng);
+    lines.push.apply(lines, st.hh);
+    capture('street');
+  }
+
+  var guard=0;
+  while(++guard<1200){
+    validate(s);
+    if(st.phase==='betting'){
+      if(st.toAct===0){ capture('street'); break; }
+      var a=AI.decide(st, st.toAct, rng);
+      audit.push(record(function(){return strictAct(st, st.toAct, a);}));
+    } else if(st.phase==='roundEnd'){
+      record(function(){return E.returnUncalled(st);});
+      var active=st.players.filter(E.inPlay), actors=st.players.filter(E.actionable);
+      if(active.length>1&&actors.length<=1&&!st.chatRevealed){
+        active.forEach(function(p){p.shown=true;});
+        st.chatRevealed=true;
+        lines.push('All-in reveal: '+active.map(function(p){return p.name+' ['+p.hole.map(E.cardPretty).join(' ')+']';}).join('; '));
+        capture('all-in reveal');
+      }
+      var ev2=record(function(){return E.proceed(st);});
+      if(ev2.type==='showdown'){
+        var resHands=st.result.hands;
+        Object.keys(resHands).forEach(function(ik){
+          var i=+ik, h=resHands[i], cs=st.players[i].hole.concat(st.board), found=false;
+          for(var a=0;a<cs.length&&!found;a++) for(var b=a+1;b<cs.length&&!found;b++){
+            var five=cs.filter(function(_,j){return j!==a&&j!==b;});
+            if(E.evalHand(five)===h.score){ h.bestFive=five.map(E.cardStr); found=true; }
+          }
+        });
+      }
+      if(ev2.type==='street') capture('street');
+      else capture(ev2.type==='showdown'?'showdown':'award');
+    } else if(st.phase==='done'){
+      var h=JSON.parse(JSON.stringify(st));
+      if(!s.history.length || s.history[s.history.length-1].handNo!==st.handNo) s.history.push(h);
+      chunks.push({hand:st.handNo, lines:lines.slice()});
+      lines=[];
+      // Bust: opponents with zero stack leave before the next deal (engine flags them out on startHand).
+      if(st.players[0].stack===0||st.handNo>=s.handLimit||st.players.filter(function(p){return p.stack>0;}).length<2){
+        s.complete=true;
+        s.awaitingNext=false;
+        s.reason=st.players[0].stack===0?'Hero busted':st.handNo>=s.handLimit?'Hand limit reached':'Only one player remains';
+        break;
+      }
+      // Pause on the finished hand so the UI can show the reveal and a Next hand button.
+      // The next deal is started only by nextHand(), not automatically.
+      s.awaitingNext=true;
+      break;
+    } else throw new Error('Unexpected engine phase '+st.phase);
+  }
+  if(guard>=1200) throw new Error('Bounded action limit reached');
+  if(lines.length) chunks.push({hand:st.handNo, lines:lines.slice()});
+  s.audit.push.apply(s.audit, audit);
+  validate(s);
+  events.forEach(function(e){
+    var h=e.state.players[0];
+    if(h&&h.hole&&h.hole.length===2) e.heroHand=heroHandName(h.hole, e.state.board);
+  });
+  // nextHand is the second half of what used to auto-deal inside a step, so it
+  // must not bump commandSequence or the review snapshot contract changes.
+  if(mode!=='next') s.commandSequence=(s.commandSequence||0)+1;
+  var pub={
+    narration:chunks,
+    current:publicState(st),
+    widget:(s.complete||s.awaitingNext)?null:W.widget(st),
+    complete:!!s.complete,
+    awaitingNext:!!s.awaitingNext
+  };
+  if(s.complete){
+    pub.summary={
+      reason:s.reason,
+      hands:st.handNo,
+      cashout:W.money(st.players[0].stack),
+      profit:E.fmtSigned(st.players[0].stack-BUYIN)
+    };
+  }
+  // Pre-action snapshot equivalent to *_response.json, for the review pipeline.
+  if(pub.widget){
+    s.decisionSnapshots.push({
+      commandSequence:s.commandSequence,
+      public:{narration:chunks, current:pub.current, widget:snapshotMenu(pub.widget), complete:false},
+      private:{commandSequence:s.commandSequence, chipTotalDimes:E.chipTotal(st)/10}
+    });
+  }
+  s.stages=s.stages||[];
+  events.forEach(function(e){ s.stages.push({
+    hand:e.hand, street:e.street, kind:e.kind, board:e.board, pot:e.pot,
+    heroHand:e.heroHand||null
+  }); });
+  return {state:s, render:events, public:pub, private:{chipTotalDimes:E.chipTotal(st)/10, audit:audit, commandSequence:s.commandSequence}};
+}
+
+function startGdr(opts){
+  opts=opts||{};
+  var rng=opts.rng||defaultRng();
+  if(typeof AI.installGdrProfiles==='function') AI.installGdrProfiles(AI);
+  var names=opts.names||opts.seats||drawSeats(rng);
+  if(names[0]!=='Max') throw new Error('Hero Max must sit first');
+  if(names.length<2||names.length>9||new Set(names).size!==names.length) throw new Error('Need 2–9 unique seats');
+  names.forEach(function(n){ if(BENCHED.indexOf(n)>=0) throw new Error(n+' stays benched'); });
+  var button=opts.button;
+  if(button==null) button=Math.floor(rng()*names.length);
+  if(!(button>=0&&button<names.length)) throw new Error('Invalid button');
+  var handLimit=opts.handLimit||HAND_LIMIT;
+  if(handLimit!==16&&handLimit!==24) throw new Error('GDR is 16 or 24 hands');
+  var deals=opts.deals||freezeDeals(names, handLimit, rng);
+  if(deals.length!==handLimit) throw new Error('Deal count must equal hand limit');
+  var s={
+    schema:SCHEMA,
+    session:opts.session||null,
+    format:'gdr',
+    handLimit:handLimit,
+    initialButton:button,
+    names:names,
+    totalCents:names.length*BUYIN,
+    engine:E.newSession(names),
+    deals:deals,
+    focus:[],
+    history:[],
+    audit:[],
+    complete:false,
+    commandSequence:0,
+    decisions:[],
+    decisionSnapshots:[],
+    stages:[],
+    _decisionCount:0,
+    awaitingNext:false,
+    rng:rng,
+    source:'html-player',
+    created:Date.now()
+  };
+  return drive(s, null, rng);
+}
+
+function nextHand(s, rng){
+  if(!s||s.schema!==SCHEMA||s.complete) throw new Error('Not an active GDR state');
+  if(!s.awaitingNext) throw new Error('The current hand is still in play');
+  return drive(s, null, rng||s.rng, 'next');
+}
+
+function resumeToHero(s, rng){
+  // Test/helper: keep dealing finished hands until Max must act or the session ends.
+  // Produces the same engine path, RNG consumption, history and export as the
+  // previous auto-advance drive() — the pause is skipped, not replayed.
+  var r={state:s}, g=0;
+  while(r.state.awaitingNext && !r.state.complete && g++<48){
+    r=nextHand(r.state, rng||r.state.rng);
+  }
+  return r;
+}
+
+function parseAction(text){
+  var parts=String(text).trim().toLowerCase().split(/\s+/), typ=parts[0];
+  if(typ==='all-in'||typ==='allin') return {type:'allin'};
+  if(typ==='bet'||typ==='raise'){
+    if(parts.length!==2) throw new Error('Use bet AMOUNT or raise TOTAL_THIS_STREET');
+    var n=Number(parts[1].replace('$',''));
+    if(!Number.isFinite(n)) throw new Error('Bad amount');
+    var cents=Math.round(n*100);
+    if(cents%10) throw new Error('Amounts must be exact $0.10 increments');
+    return {type:typ, cents:cents};
+  }
+  if(['fold','check','call'].indexOf(typ)<0 || parts.length!==1) throw new Error('Action: fold/check/call/bet X/raise X/allin');
+  return {type:typ};
+}
+
+function stepGdr(s, action, rng){
+  if(!s||s.schema!==SCHEMA||s.complete) throw new Error('Not an active GDR state');
+  var input=typeof action==='string'?parseAction(action):action;
+  return drive(s, input, rng||s.rng);
+}
+
+function pad2(n){ return (n<10?'0':'')+n; }
+function exportFilename(s, now){
+  // gdrNN-hand-history.json when a session number is set; otherwise a local
+  // timestamp so successive untitled sessions do not overwrite each other.
+  var sess=s&&s.session;
+  if(sess!=null && sess!=='') return 'gdr'+sess+'-hand-history.json';
+  now=now||new Date();
+  var ts=now.getFullYear()+'-'+pad2(now.getMonth()+1)+'-'+pad2(now.getDate())+'-'+pad2(now.getHours())+pad2(now.getMinutes())+pad2(now.getSeconds());
+  return 'gdr-hand-history-'+ts+'.json';
+}
+
+function moneyCents(s){
+  if(typeof s==='number') return Math.round(s);
+  return Math.round(Number(String(s).replace('$',''))*100);
+}
+
+function buildExport(s){
+  var st=s.engine, hero=st.players[0];
+  var hands=s.history.map(function(h){
+    var holes={}, startStacks={}, endStacks={};
+    h.players.forEach(function(p){
+      holes[p.name]=p.hole.map(E.cardStr);
+      startStacks[p.name]=p.startStack;
+      endStacks[p.name]=p.stack;
+    });
+    var plan=s.deals[h.handNo-1]||null;
+    return {
+      handNo:h.handNo,
+      button:h.button, sb:h.sb, bb:h.bb,
+      buttonName:h.players[h.button].name,
+      smallBlind:h.players[h.sb].name,
+      bigBlind:h.players[h.bb].name,
+      startStacks:startStacks, endStacks:endStacks,
+      holes:holes,
+      board:h.board.map(E.cardStr),
+      burns:plan?plan.burns:null,
+      hh:h.hh.slice(),
+      result:h.result,
+      created:h.created,
+      decisions:s.decisions.filter(function(d){return d.hand===h.handNo;}),
+      stages:s.stages.filter(function(g){return g.hand===h.handNo;})
+    };
+  });
+  // If a hand is in progress, include a partial entry so a mid-session export is complete enough to resume/review later.
+  if(!s.complete && st.handNo && !hands.some(function(h){return h.handNo===st.handNo;})){
+    var holes={}, startStacks={}, endStacks={};
+    st.players.forEach(function(p){
+      holes[p.name]=p.hole.map(E.cardStr);
+      startStacks[p.name]=p.startStack;
+      endStacks[p.name]=p.stack;
+    });
+    hands.push({
+      handNo:st.handNo, button:st.button, sb:st.sb, bb:st.bb,
+      buttonName:st.players[st.button].name,
+      smallBlind:st.players[st.sb].name,
+      bigBlind:st.players[st.bb].name,
+      startStacks:startStacks, endStacks:endStacks, holes:holes,
+      board:st.board.map(E.cardStr),
+      burns:(s.deals[st.handNo-1]||{}).burns||null,
+      hh:st.hh.slice(), result:st.result, created:st.created,
+      decisions:s.decisions.filter(function(d){return d.hand===st.handNo;}),
+      stages:s.stages.filter(function(g){return g.hand===st.handNo;}),
+      inProgress:true
+    });
+  }
+  return {
+    schema:EXPORT_SCHEMA,
+    format:'gdr',
+    session:s.session,
+    handLimit:s.handLimit,
+    blinds:{sb:10, bb:20},
+    buyin:BUYIN,
+    names:s.names.slice(),
+    initialButton:s.initialButton,
+    totalCents:s.totalCents,
+    deals:JSON.parse(JSON.stringify(s.deals)),
+    hands:hands,
+    decisions:s.decisions.slice(),
+    decisionSnapshots:s.decisionSnapshots.slice(),
+    stages:s.stages.slice(),
+    history:JSON.parse(JSON.stringify(s.history)),
+    audit:JSON.parse(JSON.stringify(s.audit)),
+    engine:JSON.parse(JSON.stringify(s.engine)),
+    focus:[],
+    complete:!!s.complete,
+    reason:s.reason||null,
+    commandSequence:s.commandSequence,
+    cashout:hero.stack,
+    profit:hero.stack-BUYIN,
+    cashoutMoney:W.money(hero.stack),
+    profitMoney:E.fmtSigned(hero.stack-BUYIN),
+    source:'html-player',
+    created:s.created,
+    exportedAt:Date.now()
+  };
+}
+
+function stateFromExport(exp, sessionOverride){
+  if(!exp || (exp.schema!==EXPORT_SCHEMA && exp.schema!==SCHEMA))
+    throw new Error('Not a GDR HTML export or fast-chat state');
+  var session=sessionOverride!=null?sessionOverride:exp.session;
+  var history=exp.history;
+  if(!history || !history.length){
+    if(exp.schema===EXPORT_SCHEMA) throw new Error('Export has no completed-hand history');
+  }
+  var names=exp.names;
+  var s={
+    schema:SCHEMA,
+    session:session,
+    format:'gdr',
+    handLimit:exp.handLimit||HAND_LIMIT,
+    initialButton:exp.initialButton,
+    names:names,
+    totalCents:exp.totalCents||names.length*BUYIN,
+    engine:exp.engine,
+    deals:exp.deals,
+    focus:exp.focus||[],
+    history:history,
+    audit:exp.audit||[],
+    complete:!!exp.complete,
+    reason:exp.reason||null,
+    commandSequence:exp.commandSequence||((exp.decisionSnapshots||[]).length+1),
+    source:'html-player',
+    htmlExport:{
+      schema:exp.schema,
+      exportedAt:exp.exportedAt,
+      decisions:exp.decisions||[],
+      decisionSnapshots:exp.decisionSnapshots||[],
+      stages:exp.stages||[],
+      hands:exp.hands||[]
+    }
+  };
+  return s;
+}
+
+var api={
+  REGULARS:REGULARS, EXTRAS:EXTRAS, BENCHED:BENCHED, HAND_LIMIT:HAND_LIMIT, BUYIN:BUYIN,
+  SCHEMA:SCHEMA, EXPORT_SCHEMA:EXPORT_SCHEMA,
+  defaultRng:defaultRng, seededRng:seededRng, systemRng:systemRng, nodeSystemRng:nodeSystemRng,
+  drawSeats:drawSeats, freezeDeals:freezeDeals, shuffleInPlace:shuffleInPlace, sample:sample,
+  startGdr:startGdr, stepGdr:stepGdr, nextHand:nextHand, resumeToHero:resumeToHero, parseAction:parseAction, drive:drive,
+  buildExport:buildExport, exportFilename:exportFilename, stateFromExport:stateFromExport,
+  publicState:publicState, validate:validate, strictAct:strictAct,
+  lockedDeck:lockedDeck, begin:begin, heroHandName:heroHandName,
+  widget:W.widget, lastAggressor:W.lastAggressor, parseCustom:W.parseCustom, actionFrom:W.actionFrom
+};
+if(typeof module!=='undefined'&&module.exports) module.exports=api;
+else root.GdrSession=api;
+if(typeof window!=='undefined') window.GdrSession=api;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+;
+/* GDR HTML player UI. No mid-session coaching. Offline, single file. */
+(function(){
+'use strict';
+if(typeof window==='undefined') return;
+var E=PokerEngine, S=GdrSession, W=GdrWidget, fmt=E.fmt;
+var KEY='gdrHtmlPlayer.v1';
+var sessionResult=null, lastPublic=null, errTimer=null, logOpen=false, autoExported=false, autoExportAttempted=false;
+var dirHandle=null, dirHandleReady=null;
+var FOLDER_DB='gdrHtmlPlayer.fs', FOLDER_STORE='handles', FOLDER_IDB_KEY='saveDir';
+var FOLDER_META_KEY='gdrHtmlPlayer.saveFolderMeta';
+var EXPORT_BACKUP_KEY='gdrHtmlPlayer.lastExport.v1';
+var RECOMMENDED_FOLDER='Documents\\PokerLogs';
+
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function show(id,on){var el=$(id); if(!el) return; el.classList.toggle('hidden', !on);}
+function cardHTML(c,cls){
+  if(c===null||c===undefined) return '<div class="card back '+(cls||'')+'"></div>';
+  var r=E.RANKS[c>>2], s=c&3, red=(s===1||s===2);
+  return '<div class="card'+(red?' red':'')+' '+(cls||'')+'"><span class="r">'+(r==='T'?'10':r)+'</span><span class="s">'+E.SYM[s]+'</span></div>';
+}
+function posLabel(st,i,liveIdx){
+  var lv=liveIdx||st.players.filter(function(p){return !p.out && (st.phase==='done'?true:p.stack>0||p.inHand);}).map(function(p){return p.i;});
+  // During a hand, include anyone still seated (stack>0 or in this hand)
+  lv=st.players.filter(function(p){return !p.out;}).map(function(p){return p.i;});
+  var n=lv.length, d=(lv.indexOf(i)-lv.indexOf(st.button)+n)%n;
+  if(n===2) return d===0?'BTN/SB':'BB';
+  if(d===0) return 'BTN'; if(d===1) return 'SB'; if(d===2) return 'BB';
+  var rest=n-3, k=d-3;
+  if(k===0) return 'UTG';
+  var tail=['UTG+1','UTG+2','LJ','HJ','CO'];
+  if(n===9) tail=['UTG+1','UTG+2','MP','HJ','CO'];
+  else if(n===8) tail=['UTG+1','MP','HJ','CO'];
+  else tail=tail.slice(tail.length-(rest-1));
+  return tail[k-1]||'MP';
+}
+function seatPos(k,n,wrap){
+  var w=wrap.clientWidth, h=wrap.clientHeight, land=w>h*1.15, tall=h>w*1.08;
+  var ang=Math.PI/2 + 2*Math.PI*k/n;
+  var rx=land?41:39, ry=land?39:39.5;
+  // Narrow tall phones: a taller oval; side seats hug the rail.
+  if(tall){ rx=38; ry=41; }
+  var x=50+rx*Math.cos(ang), y=50+ry*Math.sin(ang);
+  if(k===0) y=land?83:(tall?89:84);
+  return {x:x,y:y,land:land,tall:tall};
+}
+
+function current(){ return sessionResult && sessionResult.state; }
+
+function save(){
+  try{
+    var s=current(); if(!s) { localStorage.removeItem(KEY); return; }
+    var copy=JSON.parse(JSON.stringify({
+      autoExported:!!autoExported,
+      autoExportAttempted:!!autoExportAttempted,
+      state:{
+        schema:s.schema, session:s.session, format:s.format, handLimit:s.handLimit,
+        initialButton:s.initialButton, names:s.names, totalCents:s.totalCents,
+        engine:s.engine, deals:s.deals, focus:s.focus, history:s.history, audit:s.audit,
+        complete:s.complete, reason:s.reason, commandSequence:s.commandSequence,
+        decisions:s.decisions, decisionSnapshots:s.decisionSnapshots, stages:s.stages,
+        _decisionCount:s._decisionCount, awaitingNext:!!s.awaitingNext, source:s.source, created:s.created
+      },
+      lastPublic:lastPublic
+    }));
+    localStorage.setItem(KEY, JSON.stringify(copy));
+  }catch(e){}
+}
+function loadSaved(){
+  try{
+    var j=localStorage.getItem(KEY); if(!j) return null;
+    var o=JSON.parse(j);
+    if(!o||!o.state||o.state.schema!==S.SCHEMA||o.state.format!=='gdr') return null;
+    return o;
+  }catch(e){ return null; }
+}
+
+var LAST_SESSION_KEY='gdr-last-session-number';
+var LAST_SESSION_BASE=50; // GDR50 was the last session; a fresh device (for example an iPhone with no stored history) pre-fills 51
+function lastSessionNumber(){
+  var n=LAST_SESSION_BASE;
+  try{ var v=parseInt(localStorage.getItem(LAST_SESSION_KEY),10); if(Number.isInteger(v)&&v>n) n=v; }catch(e){}
+  try{ var sv=loadSaved(); if(sv&&sv.state&&Number.isInteger(sv.state.session)&&sv.state.session>n) n=sv.state.session; }catch(e){}
+  return n;
+}
+function rememberSessionNumber(n){
+  if(!Number.isInteger(n)) return;
+  try{ var v=parseInt(localStorage.getItem(LAST_SESSION_KEY),10); if(!Number.isInteger(v)||n>v) localStorage.setItem(LAST_SESSION_KEY,String(n)); }catch(e){}
+}
+function nextSessionNumber(){ return lastSessionNumber()+1; }
+
+function startNew(){
+  if(!$('sessNum').value) $('sessNum').value=String(nextSessionNumber());
+  var n=parseInt($('sessNum').value,10);
+  if($('sessNum').value && (!Number.isInteger(n) || n<1)){ flashErr('Session number must be a positive integer.'); return; }
+  var saved=loadSaved();
+  if(saved && saved.state && !saved.state.complete){
+    if(!confirm('A rehearsal is already in progress (hand '+(saved.state.engine&&saved.state.engine.handNo)+' of '+(saved.state.handLimit)+'). Start a new one and discard it?')) return;
+  }
+  var rng=S.defaultRng();
+  var res=S.startGdr({session:Number.isInteger(n)?n:null, rng:rng});
+  rememberSessionNumber(res.state.session);
+  sessionResult=res;
+  lastPublic=res.public;
+  autoExported=false;
+  autoExportAttempted=false;
+  save();
+  if(res.state.complete) enterEnd();
+  else enterPlay();
+}
+
+function resumeSaved(){
+  var saved=loadSaved();
+  if(!saved) return;
+  sessionResult={state:saved.state, public:saved.lastPublic};
+  lastPublic=saved.lastPublic;
+  autoExported=!!saved.autoExported;
+  autoExportAttempted=!!saved.autoExportAttempted || !!saved.autoExported;
+  // Recompute public in case
+  lastPublic=lastPublic||{current:S.publicState(saved.state.engine), widget:saved.state.complete?null:W.widget(saved.state.engine), complete:!!saved.state.complete, narration:[]};
+  if(saved.state.complete) enterEnd();
+  else enterPlay();
+}
+
+function enterPlay(){
+  show('startScreen',false); show('endScreen',false); show('playScreen',true);
+  render();
+}
+function enterEnd(){
+  show('startScreen',false); show('playScreen',true); // keep table visible
+  render();
+  showEndBanner();
+}
+
+function showEndBanner(){
+  var s=current(); if(!s) return;
+  var hero=s.engine.players[0], profit=hero.stack-S.BUYIN;
+  $('endTitle').textContent='Game-Day Rehearsal'+(s.session?' #'+s.session:'')+' complete';
+  $('endReason').textContent=s.reason||'Session over';
+  $('endPnl').textContent=E.fmtSigned(profit);
+  $('endPnl').className='pnl '+(profit>0?'up':profit<0?'down':'');
+  $('endCash').textContent='Cashout '+fmt(hero.stack)+'  ·  '+s.history.length+' of '+s.handLimit+' hands  ·  '+s.decisions.length+' decisions';
+  show('endScreen',true);
+  show('controls',false);
+  maybeAutoExport();
+}
+
+function render(){
+  var s=current(); if(!s) return;
+  renderHeader();
+  renderTable();
+  renderLog();
+  renderControls();
+}
+
+function renderHeader(){
+  var s=current(), st=s.engine, hero=st.players[0];
+  var inHand=st.phase==='betting'||st.phase==='roundEnd';
+  var net=(inHand?hero.startStack:hero.stack)-S.BUYIN;
+  // Show session net (current stack vs buy-in), not just this hand start
+  net=hero.stack-S.BUYIN;
+  if(inHand) net=hero.stack-S.BUYIN; // stack already reflects street contributions? stack is remaining, contrib is in pot. Session net should use stack+contrib vs starting? For display during a hand, remaining+contrib - 25 is this-session including current pot share. Simpler: stack - 25 after settlement; during hand show stack (behind) and mention pot.
+  var cls=net>0?'up':net<0?'down':'';
+  var label='Hand '+st.handNo+' of '+s.handLimit;
+  if(s.session) label='GDR'+s.session+' · '+label;
+  $('sess').innerHTML=esc(label)+' · Net <b class="'+cls+'">'+esc(E.fmtSigned(net))+'</b> · '+esc(fmt(hero.stack));
+}
+
+function renderTable(){
+  var s=current(), st=s.engine, wrap=$('tableWrap');
+  if(!wrap) return;
+  var seated=st.players.filter(function(p){ return !p.out; });
+  // After a bust at hand end, out is set on next startHand. During done phase of a bust hand, they're still inHand with stack 0 — keep them for the result, drop on next deal.
+  var n=seated.length || st.players.length;
+  var map=[]; // layout index -> player
+  // Keep original seat order, hero (0) at bottom: layout k corresponds to player (heroOffset+k)% among seated
+  var heroPos=seated.findIndex(function(p){return p.i===0;});
+  if(heroPos<0) heroPos=0;
+  var order=seated.slice(heroPos).concat(seated.slice(0,heroPos));
+  n=order.length;
+  var html='', k, p;
+  var showAll=(st.phase==='done'&&st.result&&st.result.type==='showdown')||!!st.chatRevealed;
+  var winners=(st.result&&st.result.winnings)||{};
+  var agg=W.lastAggressor(st);
+  var aggName=agg&&agg.name;
+  for(k=0;k<n;k++){
+    p=order[k];
+    var pos=seatPos(k,n,wrap);
+    var isHero=p.i===0;
+    var isAgg=aggName && p.name===aggName && st.phase==='betting';
+    var isWin=!!winners[p.i];
+    var cls='seat'+(isHero?' hero':'')+(p.out?' out':'')+(p.inHand&&p.folded?' folded':'')+(st.phase==='betting'&&st.toAct===p.i?' active':'')+(isAgg?' aggressor':'')+(isWin&&st.phase==='done'?' winner':'');
+    var stk=p.stack, sc=stk>E.BUYIN?'up':stk<E.BUYIN?'down':'';
+    var inner='';
+    var faceUp=p.inHand&&!p.folded&&p.hole&&p.hole.length===2&&(p.shown||showAll||(st.runout&&st.phase!=='done')||(st.phase==='done'&&st.result&&st.result.type==='showdown'));
+    var made='';
+    if(faceUp){
+      if(st.result&&st.result.hands&&st.result.hands[p.i]&&st.result.hands[p.i].name) made=st.result.hands[p.i].name;
+      else if(st.board&&st.board.length>=3) made=S.heroHandName(p.hole, st.board);
+    }
+    if(isWin&&st.result) made=(made?made+' · ':'')+'Wins '+fmt(winners[p.i]);
+    if(isHero){
+      var hc='';
+      if(p.inHand&&p.hole.length){ hc=p.hole.map(function(c){return cardHTML(c,(p.folded?' dim':'')+(isWin?' win':''));}).join(''); }
+      var hn=made || (p.inHand&&p.hole.length? S.heroHandName(p.hole, st.board) : '');
+      inner+='<div class="hero-hand">'+esc(hn)+'</div><div class="hero-cards">'+hc+'</div>';
+    } else if(p.inHand&&!p.folded){
+      if(faceUp){
+        inner+='<div class="shown">'+p.hole.map(function(c){return cardHTML(c,(isWin?'win':''));}).join('')+'</div>';
+        if(made) inner+='<div class="shown-hand'+(isWin?' win':'')+'">'+esc(made)+'</div>';
+      } else inner+='<div class="mini">'+cardHTML(null,'')+cardHTML(null,'')+'</div>';
+    }
+    var tag='';
+    if(isAgg) tag='<div class="tag agg">'+esc(agg.label)+'</div>';
+    else if(p.last && p.inHand && st.phase!=='done') tag='<div class="tag'+(p.folded?' fold':'')+'">'+esc(p.last)+'</div>';
+    var seatLab=posLabel(st,p.i);
+    inner+='<div class="plate"><div class="pos">'+esc(seatLab)+'</div><div class="nm">'+esc(p.name)+'</div><div class="stk '+sc+'">'+fmt(p.stack)+'</div></div>'+tag;
+    html+='<div class="'+cls+'" style="left:'+pos.x+'%;top:'+pos.y+'%">'+inner+'</div>';
+    // chips for current bet
+    if(p.bet>0 && st.phase!=='done'){
+      var cx=50+(pos.x-50)*0.62, cy=50+(pos.y-50)*0.62;
+      html+='<div class="chip'+(isAgg?' agg-amt':'')+'" style="left:'+cx+'%;top:'+cy+'%"><i></i> '+fmt(p.bet)+'</div>';
+    }
+    // dealer / blinds
+    var lab=posLabel(st,p.i);
+    var bx=50+(pos.x-50)*0.72, by=50+(pos.y-50)*0.72;
+    if(p.i===st.button) html+='<div class="dbtn" style="left:'+bx+'%;top:'+by+'%">D</div>';
+    else if(p.i===st.sb && n>2) html+='<div class="blind" style="left:'+bx+'%;top:'+by+'%">SB</div>';
+    else if(p.i===st.bb) html+='<div class="blind bb" style="left:'+(bx+1)+'%;top:'+by+'%">BB</div>';
+  }
+  // Remove previous seats/chips (keep felt, pot, board, logo)
+  Array.from(wrap.querySelectorAll('.seat,.chip,.dbtn,.blind')).forEach(function(el){el.remove();});
+  wrap.insertAdjacentHTML('beforeend', html);
+
+  var pot=st.phase==='done'?((st.result&&st.result.pot)||0):E.potTotal(st);
+  renderHeroBar(st, order);
+  $('potBox').innerHTML='Pot '+fmt(pot)+(st.street?' <small>'+esc(st.street)+'</small>':'');
+  var bhtml='';
+  for(var i=0;i<5;i++){
+    if(i<st.board.length) bhtml+=cardHTML(st.board[i],'');
+    else bhtml+='<div class="slot"></div>';
+  }
+  $('board').innerHTML=bhtml;
+}
+
+function renderHeroBar(st, order){
+  var bar=$('heroBar'); if(!bar) return;
+  var p=st.players[0];
+  var winners=(st.result&&st.result.winnings)||{}, isWin=!!winners[0]&&st.phase==='done';
+  var hc=(p.inHand&&p.hole&&p.hole.length)?p.hole.map(function(c){return cardHTML(c,(p.folded?' dim':'')+(isWin?' win':''));}).join(''):'';
+  var made='';
+  if(p.inHand&&p.hole&&p.hole.length){
+    if(st.result&&st.result.hands&&st.result.hands[0]&&st.result.hands[0].name) made=st.result.hands[0].name;
+    else made=S.heroHandName(p.hole, st.board);
+  }
+  if(isWin) made=(made?made+' · ':'')+'Wins '+fmt(winners[0]);
+  if(p.inHand&&p.folded) made='Folded';
+  bar.innerHTML='<div class="hb-cards">'+hc+'</div><div class="hb-txt"><div class="hb-hand">'+esc(made)+'</div>'+
+    '<div class="hb-me">'+esc(posLabel(st,0))+' · '+esc(p.name)+' · '+fmt(p.stack)+'</div></div>';
+}
+
+function renderLog(){
+  var s=current();
+  var lines=[];
+  s.history.forEach(function(h){ lines.push(h.hh.join('\n')); });
+  if(s.engine && s.engine.hh && s.engine.phase!=='done'){
+    if(!s.history.length || s.history[s.history.length-1].handNo!==s.engine.handNo)
+      lines.push(s.engine.hh.join('\n'));
+  }
+  var last=lines[lines.length-1]||'';
+  // Live feed: every line of the current (or last) hand, newest at the bottom.
+  var feed=last.trim().split('\n').filter(function(x){ return x.trim(); });
+  var tk=$('tickerTxt');
+  tk.innerHTML=feed.map(function(x){ return '<div class="ln">'+esc(x)+'</div>'; }).join('');
+  tk.scrollTop=tk.scrollHeight;
+  requestAnimationFrame(function(){ tk.scrollTop=tk.scrollHeight; });
+  if(logOpen){
+    $('logPane').innerHTML=lines.map(function(block){
+      var t=esc(block);
+      t=t.replace(/^(Hand #.+)$/m,'<span class="hnh">$1</span>');
+      return '<div class="handblk">'+t+'</div>';
+    }).join('');
+    scrollLogToEnd();
+  }
+}
+function scrollLogToEnd(){
+  var el=$('logPane');
+  if(!el||!logOpen) return;
+  el.scrollTop=el.scrollHeight;
+  requestAnimationFrame(function(){ el.scrollTop=el.scrollHeight; });
+}
+function setLogOpen(on){
+  logOpen=!!on;
+  var pane=$('logPane'), body=$('playBody'), main=$('main');
+  if(pane) pane.classList.toggle('open', logOpen);
+  if(body) body.classList.toggle('log-open', logOpen);
+  if(main) main.classList.toggle('log-open', logOpen);
+  if($('btnLog')) $('btnLog').textContent=logOpen?'Hide log':'Hand log';
+  if(logOpen){ renderLog(); scrollLogToEnd(); }
+}
+
+function handResultText(s){
+  var st=s.engine, res=st.result;
+  if(!res) return 'Hand '+st.handNo+' complete.';
+  var pot=fmt(res.pot||0);
+  if(res.type==='fold'||res.type==='award'){
+    var wi=(res.winners&&res.winners[0]);
+    var w=wi!=null?st.players[wi]:null;
+    return 'Hand '+st.handNo+' complete. '+(w?w.name:'')+' wins '+pot+' (no showdown).';
+  }
+  var parts=[];
+  (res.pots||[]).forEach(function(pt){
+    var names=(pt.winners||[]).map(function(i){return st.players[i].name;}).join(' & ');
+    var hn=res.hands&&pt.winners&&res.hands[pt.winners[0]]?' with '+res.hands[pt.winners[0]].name:'';
+    parts.push(names+' wins '+(pt.label||'pot').toLowerCase()+' '+fmt(pt.amount)+hn);
+  });
+  return 'Hand '+st.handNo+' complete. '+(parts.join('. ')||('Showdown, pot '+pot))+'.';
+}
+
+function goNextHand(){
+  var s=current();
+  if(!s||s.complete||!s.awaitingNext) return;
+  try{
+    var res=S.nextHand(s, s.rng||S.defaultRng());
+    sessionResult=res;
+    lastPublic=res.public;
+    save();
+    if(res.state.complete) enterEnd();
+    else render();
+  }catch(e){ flashErr(e.message||String(e)); }
+}
+
+function renderControls(){
+  var s=current();
+  if(s.complete){ show('controls',false); show('prompt',false); if($('customAmt')) $('customAmt').parentElement.classList.add('hidden'); return; }
+  show('controls',true); show('prompt',true);
+  if(s.awaitingNext){
+    $('prompt').textContent=handResultText(s);
+    $('acts').innerHTML='<button type="button" class="abtn nexthand" id="btnNextHand">Next hand</button>';
+    if($('customAmt')) $('customAmt').parentElement.classList.add('hidden');
+    $('err').textContent='';
+    $('btnNextHand').addEventListener('click', goNextHand);
+    return;
+  }
+  if($('customAmt')) $('customAmt').parentElement.classList.remove('hidden');
+  var w=W.widget(s.engine);
+  if(!w){ $('acts').innerHTML=''; $('prompt').textContent=''; return; }
+  $('prompt').textContent=w.prompt;
+  var opts=w.options||[];
+  var n=opts.length, cls=n<=1?'r1':n===2?'r2':'r3';
+  if(n===4) cls='r2';
+  var html='<div class="row '+cls+'">';
+  opts.forEach(function(o){
+    var c='abtn';
+    if(o.action==='fold') c+=' fold';
+    else if(o.action==='call'||o.action==='check') c+=' call';
+    else c+=' bet';
+    if(o.danger) c+=' danger';
+    html+='<button type="button" class="'+c+'" data-act="'+esc(o.action)+'">'+esc(o.label)+'</button>';
+  });
+  html+='</div>';
+  $('acts').innerHTML=html;
+  $('customAmt').value='';
+  $('err').textContent='';
+  Array.from($('acts').querySelectorAll('button')).forEach(function(btn){
+    btn.addEventListener('click', function(){ takeAction(btn.getAttribute('data-act')); });
+  });
+}
+
+function flashErr(msg){
+  $('err').textContent=msg||'';
+  clearTimeout(errTimer);
+  if(msg) errTimer=setTimeout(function(){ if($('err')) $('err').textContent=''; }, 4000);
+}
+
+function takeAction(act, fromCustom){
+  var s=current();
+  if(!s||s.complete) return;
+  try{
+    var input;
+    if(fromCustom){
+      input=W.parseCustom(act, s.engine);
+    } else {
+      input=S.parseAction(act);
+    }
+    var res=S.stepGdr(s, input, s.rng||S.defaultRng());
+    sessionResult=res;
+    lastPublic=res.public;
+    save();
+    if(res.state.complete) enterEnd();
+    else render();
+  }catch(e){
+    flashErr(e.message||String(e));
+  }
+}
+
+function submitCustom(){
+  var v=$('customAmt').value;
+  if(!v||!String(v).trim()){ flashErr('Type a raise-to or bet total, for example 1.20'); return; }
+  takeAction(v, true);
+}
+
+function exportJsonText(){
+  var s=current();
+  if(!s) return null;
+  return JSON.stringify(S.buildExport(s), null, 2);
+}
+
+function isIOS(){
+  // iPhone/iPod/iPad, including iPadOS 13+ which reports a Mac platform with touch.
+  try{
+    var ua=navigator.userAgent||'';
+    if(/iPad|iPhone|iPod/.test(ua)) return true;
+    return navigator.platform==='MacIntel' && (navigator.maxTouchPoints||0)>1;
+  }catch(e){ return false; }
+}
+
+var IOS_SAVE_HINT='Tap Save to Files, then attach the file in Grok Bot chat.';
+
+function makeExportFile(text, name){
+  try{ return new File([text], name, {type:'application/json'}); }catch(e){ return null; }
+}
+
+function canShareFile(file){
+  try{
+    return !!(file && typeof navigator.share==='function' && typeof navigator.canShare==='function' &&
+      navigator.canShare({files:[file]}));
+  }catch(e){ return false; }
+}
+
+function downloadsBlocked(){
+  // Sandboxed iframes (the Grok Bot file preview, for example) omit
+  // allow-downloads, so a blob/anchor click is silently ignored.
+  try{ if(window.self===window.top) return false; }catch(e){ return true; }
+  // We are inside an iframe. Only treat the click as a real download when we
+  // can see that this frame is unsandboxed, or that its sandbox includes
+  // allow-downloads. A cross-origin embed hides frameElement — be conservative.
+  try{
+    var fe=window.frameElement;
+    if(fe && fe.hasAttribute('sandbox')){
+      var sb=' '+(fe.getAttribute('sandbox')||'')+' ';
+      if(sb.indexOf(' allow-downloads ')===-1) return true;
+      return false;
+    }
+    if(fe) return false; // iframe, not sandboxed
+    return true; // frameElement hidden (cross-origin) — assume blocked
+  }catch(e){ return true; }
+}
+
+function revealExportPanels(){
+  document.querySelectorAll('.export-panel').forEach(function(el){ el.classList.remove('hidden'); });
+}
+
+function fillExportBoxes(text){
+  revealExportPanels();
+  document.querySelectorAll('.export-json').forEach(function(el){
+    el.value=text||'';
+    el.removeAttribute('disabled');
+    el.setAttribute('readonly','');
+  });
+}
+
+function setExportStatus(msg, kind){
+  // kind: 'ok' | 'warn' | 'err'
+  document.querySelectorAll('.export-status').forEach(function(el){
+    el.textContent=msg||'';
+    el.classList.remove('hidden','ok','warn','err');
+    if(!msg){ el.classList.add('hidden'); return; }
+    if(kind) el.classList.add(kind);
+  });
+}
+
+function triggerAnchorDownload(text, name, useDataUrl){
+  var url=null, revoke=null, a=null;
+  try{
+    a=document.createElement('a');
+    a.setAttribute('download', name);
+    a.setAttribute('rel','noopener');
+    a.style.display='none';
+    a.style.position='fixed';
+    a.style.left='-9999px';
+    if(!useDataUrl && typeof URL!=='undefined' && URL.createObjectURL){
+      var blob=new Blob([text],{type:'application/octet-stream'});
+      url=URL.createObjectURL(blob);
+      revoke=url;
+    }else{
+      // data: fallback. Keep it under a few MB; encodeURIComponent is safest for JSON.
+      if(text.length>1500000) throw new Error('data-url-too-large');
+      url='data:application/json;charset=utf-8,'+encodeURIComponent(text);
+    }
+    a.setAttribute('href', url);
+    document.body.appendChild(a);
+    // A single .click() after the node is in the document. Dispatching a
+    // MouseEvent *and* calling .click() would fire two downloads in Chromium.
+    a.click();
+    setTimeout(function(){
+      try{ if(revoke) URL.revokeObjectURL(revoke); }catch(e){}
+      if(a && a.parentNode) a.parentNode.removeChild(a);
+    }, 4000);
+    return true;
+  }catch(e){
+    try{ if(revoke) URL.revokeObjectURL(revoke); }catch(e2){}
+    if(a && a.parentNode) a.parentNode.removeChild(a);
+    return false;
+  }
+}
+
+function trySaveFilePicker(text, name){
+  if(typeof window.showSaveFilePicker!=='function') return Promise.resolve({ok:false, reason:'unavailable'});
+  return window.showSaveFilePicker({
+    suggestedName:name,
+    types:[{description:'JSON hand history', accept:{'application/json':['.json']}}]
+  }).then(function(handle){
+    return handle.createWritable().then(function(w){
+      return w.write(text).then(function(){ return w.close(); });
+    });
+  }).then(function(){ return {ok:true}; }).catch(function(e){
+    var nm=(e&&e.name)||'';
+    if(nm==='AbortError') return {ok:false, reason:'cancelled'};
+    return {ok:false, reason:(e&&e.message)||'picker-failed'};
+  });
+}
+
+function recommendedFolderPath(){ return RECOMMENDED_FOLDER; }
+
+function folderInstructions(){
+  return 'Downloads are blocked in this preview. To save hand logs to a folder on this PC:\n'
+    +'1. Open gdr-player.html in Chrome or Edge (File → Open File).\n'
+    +'2. Click “Save to folder” once.\n'
+    +'3. Choose this folder (create it if it does not exist):\n'
+    +'   '+RECOMMENDED_FOLDER+'\n'
+    +'4. When a session ends, the hand history is written there automatically as gdrNN-hand-history.json (or a timestamped name if you did not set a session number).';
+}
+
+function idbOpen(){
+  return new Promise(function(resolve, reject){
+    if(typeof indexedDB==='undefined'){ reject(new Error('no-idb')); return; }
+    var req=indexedDB.open(FOLDER_DB, 1);
+    req.onupgradeneeded=function(){
+      try{ if(!req.result.objectStoreNames.contains(FOLDER_STORE)) req.result.createObjectStore(FOLDER_STORE); }catch(e){}
+    };
+    req.onsuccess=function(){ resolve(req.result); };
+    req.onerror=function(){ reject(req.error||new Error('idb-open')); };
+  });
+}
+function idbSet(key, val){
+  return idbOpen().then(function(db){
+    return new Promise(function(resolve, reject){
+      var tx=db.transaction(FOLDER_STORE, 'readwrite');
+      tx.objectStore(FOLDER_STORE).put(val, key);
+      tx.oncomplete=function(){ resolve(true); };
+      tx.onerror=function(){ reject(tx.error||new Error('idb-set')); };
+    });
+  });
+}
+function idbGet(key){
+  return idbOpen().then(function(db){
+    return new Promise(function(resolve, reject){
+      var tx=db.transaction(FOLDER_STORE, 'readonly');
+      var r=tx.objectStore(FOLDER_STORE).get(key);
+      r.onsuccess=function(){ resolve(r.result); };
+      r.onerror=function(){ reject(r.error||new Error('idb-get')); };
+    });
+  });
+}
+
+function loadDirHandle(){
+  dirHandleReady=idbGet(FOLDER_IDB_KEY).then(function(h){
+    if(h) dirHandle=h;
+    updateFolderUi();
+    return h||null;
+  }).catch(function(){ updateFolderUi(); return null; });
+  return dirHandleReady;
+}
+
+function persistDirHandle(handle){
+  dirHandle=handle||null;
+  var meta={name:handle&&handle.name||'', at:Date.now()};
+  try{ localStorage.setItem(FOLDER_META_KEY, JSON.stringify(meta)); }catch(e){}
+  if(!handle){
+    return idbSet(FOLDER_IDB_KEY, null).catch(function(){ return false; }).then(function(){ updateFolderUi(); return false; });
+  }
+  return idbSet(FOLDER_IDB_KEY, handle).then(function(){
+    updateFolderUi();
+    return true;
+  }).catch(function(){
+    // Plain mock handles (used in tests) are not structured-cloneable.
+    // The in-memory handle still works for this page load.
+    updateFolderUi();
+    return false;
+  });
+}
+
+function updateFolderUi(){
+  var name=(dirHandle&&dirHandle.name)||'';
+  try{
+    if(!name){
+      var raw=localStorage.getItem(FOLDER_META_KEY);
+      if(raw){ var m=JSON.parse(raw); if(m&&m.name) name=m.name; }
+    }
+  }catch(e){}
+  document.querySelectorAll('.folder-label').forEach(function(el){
+    if(name){
+      el.textContent='Saving to “'+name+'”';
+      el.classList.remove('hidden');
+    }else{
+      el.textContent='No folder chosen yet';
+      el.classList.remove('hidden');
+    }
+  });
+  document.querySelectorAll('.btnSaveFolder').forEach(function(el){
+    el.textContent=dirHandle?'Change folder':'Save to folder';
+  });
+  updateDownloadBanner();
+}
+
+function applyIosUi(){
+  if(!isIOS()) return;
+  document.documentElement.classList.add('ios');
+  // No folder picker on iOS: Export opens the share sheet instead.
+  document.querySelectorAll('.btnSaveFolder').forEach(function(el){ el.classList.add('hidden'); });
+  document.querySelectorAll('.download-banner-msg').forEach(function(el){
+    el.textContent='On iPhone: tap Export hand history, then Save to Files, then attach the file in Grok Bot chat. Copy hand history also works.';
+  });
+  document.querySelectorAll('.btnCopyFolderPath').forEach(function(el){ el.classList.add('hidden'); });
+  document.querySelectorAll('.ios-hint').forEach(function(el){ el.classList.remove('hidden'); });
+  document.querySelectorAll('.desktop-hint').forEach(function(el){ el.classList.add('hidden'); });
+}
+
+function updateDownloadBanner(){
+  var blocked=downloadsBlocked();
+  document.querySelectorAll('.download-banner').forEach(function(el){
+    if(blocked) el.classList.remove('hidden');
+    else el.classList.add('hidden');
+  });
+}
+
+function backupExportToLocalStorage(text, name){
+  if(!text) return false;
+  try{
+    localStorage.setItem(EXPORT_BACKUP_KEY, JSON.stringify({
+      filename:name||'gdr-hand-history.json',
+      json:text,
+      exportedAt:(new Date()).toISOString(),
+      session:(current()&&current().session)||null
+    }));
+    return true;
+  }catch(e){
+    // Quota or private mode — the on-screen text box is still filled.
+    return false;
+  }
+}
+
+function readExportBackup(){
+  try{
+    var raw=localStorage.getItem(EXPORT_BACKUP_KEY);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+
+function ensurePermission(handle, allowRequest){
+  if(!handle) return Promise.resolve(false);
+  var opts={mode:'readwrite'};
+  var q=handle.queryPermission?handle.queryPermission(opts):Promise.resolve('granted');
+  return Promise.resolve(q).then(function(state){
+    if(state==='granted') return true;
+    if(state==='prompt' && allowRequest && handle.requestPermission){
+      return Promise.resolve(handle.requestPermission(opts)).then(function(s2){ return s2==='granted'; });
+    }
+    return false;
+  }).catch(function(){ return false; });
+}
+
+function writeExportToFolder(text, name, opts){
+  opts=opts||{};
+  var allowRequest=!!opts.allowRequest;
+  if(!dirHandle) return Promise.resolve({ok:false, reason:'no-folder'});
+  if(!text) return Promise.resolve({ok:false, reason:'no-text'});
+  name=name||'gdr-hand-history.json';
+  return ensurePermission(dirHandle, allowRequest).then(function(ok){
+    if(!ok) return {ok:false, reason:'permission'};
+    if(typeof dirHandle.getFileHandle!=='function') return {ok:false, reason:'no-getFileHandle'};
+    return Promise.resolve(dirHandle.getFileHandle(name, {create:true})).then(function(fh){
+      return Promise.resolve(fh.createWritable()).then(function(w){
+        return Promise.resolve(w.write(text)).then(function(){ return Promise.resolve(w.close?w.close():undefined); });
+      });
+    }).then(function(){
+      return {ok:true, name:name, folder:dirHandle.name||'folder'};
+    });
+  }).catch(function(e){
+    return {ok:false, reason:(e&&(e.message||e.name))||'write-failed'};
+  });
+}
+
+function chooseSaveFolder(){
+  updateDownloadBanner();
+  if(typeof window.showDirectoryPicker!=='function'){
+    setExportStatus('This window cannot pick a folder. Open gdr-player.html in Chrome or Edge, then click Save to folder.', 'warn');
+    flashErr('Open this file in Chrome or Edge to choose a folder.');
+    return Promise.resolve(false);
+  }
+  return window.showDirectoryPicker({id:'gdrPokerLogs', mode:'readwrite', startIn:'documents'}).then(function(handle){
+    if(!handle) return false;
+    return persistDirHandle(handle).then(function(){
+      setExportStatus('Folder set to “'+(handle.name||'folder')+'”. Session logs will be saved there automatically.', 'ok');
+      var s=current();
+      if(!s) return true;
+      var text=exportJsonText();
+      var name=S.exportFilename(s);
+      fillExportBoxes(text);
+      backupExportToLocalStorage(text, name);
+      return writeExportToFolder(text, name, {allowRequest:true}).then(function(r){
+        if(r&&r.ok){
+          autoExported=true;
+          autoExportAttempted=true;
+          setExportStatus('Hand history saved to “'+r.folder+'” as '+r.name, 'ok');
+          save();
+        }
+        return true;
+      });
+    });
+  }).catch(function(e){
+    if(e&&e.name==='AbortError') return false;
+    setExportStatus('Could not open that folder. Use Chrome or Edge, and pick a folder you can write to (for example '+RECOMMENDED_FOLDER+').', 'err');
+    return false;
+  });
+}
+
+function copyFolderPath(){
+  var text=RECOMMENDED_FOLDER;
+  var extra=folderInstructions();
+  function done(ok){
+    document.querySelectorAll('.btnCopyFolderPath').forEach(function(el){
+      el.textContent=ok?'Copied path':'Copy folder path';
+    });
+    if(ok) setTimeout(function(){
+      document.querySelectorAll('.btnCopyFolderPath').forEach(function(el){ el.textContent='Copy folder path'; });
+    }, 1800);
+    return ok;
+  }
+  function exec(){
+    var ta=document.createElement('textarea');
+    ta.value=text;
+    ta.style.position='fixed'; ta.style.left='-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok=false;
+    try{ ok=document.execCommand('copy'); }catch(e){ ok=false; }
+    if(ta.parentNode) ta.parentNode.removeChild(ta);
+    return ok;
+  }
+  var clip=navigator.clipboard;
+  if(clip && typeof clip.writeText==='function'){
+    return clip.writeText(text).then(function(){ return done(true); }).catch(function(){ return done(exec()); });
+  }
+  return Promise.resolve(done(exec()));
+}
+
+function setTestDirectoryHandle(handle){
+  dirHandle=handle||null;
+  dirHandleReady=Promise.resolve(handle||null);
+  updateFolderUi();
+}
+
+
+function downloadExport(/*evt or opts*/){
+  var opts=(arguments[0] && typeof arguments[0]==='object' && !arguments[0].target)?(arguments[0]||{}):{};
+  var auto=!!opts.auto;
+  var s=current();
+  if(!s){ setExportStatus('No session to export.', 'err'); flashErr('No session to export.'); return Promise.resolve(false); }
+  var text=exportJsonText();
+  var name=S.exportFilename(s);
+  fillExportBoxes(text);
+  backupExportToLocalStorage(text, name);
+  updateDownloadBanner();
+  var ios=isIOS();
+
+  // Share sheet first (iPhone/iPad, or any browser that can share files when no
+  // folder is set). navigator.share must run synchronously inside the click.
+  if(!auto){
+    var file=makeExportFile(text, name);
+    if(canShareFile(file) && (ios || !dirHandle)){
+      var shareP;
+      try{ shareP=navigator.share({files:[file], title:name}); }
+      catch(e){ shareP=Promise.reject(e); }
+      return Promise.resolve(shareP).then(function(){
+        setExportStatus(ios?('Shared '+name+'. If you chose Save to Files, attach the file in Grok Bot chat.'):('Shared '+name+'.'), 'ok');
+        return true;
+      }, function(e){
+        if(e && e.name==='AbortError'){
+          // User closed the share sheet: no error, just a reminder.
+          setExportStatus(ios?('Share cancelled. Tap Export again, then '+IOS_SAVE_HINT.charAt(0).toLowerCase()+IOS_SAVE_HINT.slice(1)):'Share cancelled. Click Export again, or use Copy hand history.', ios?'ok':'');
+          return false;
+        }
+        return Promise.resolve(anchorPath());
+      });
+    }
+  }
+
+  function succeed(msg){
+    setExportStatus(msg, 'ok');
+    return true;
+  }
+  function blockedMsg(){
+    setExportStatus(ios?'The file could not be saved here. Tap Copy hand history and paste it into Grok Bot chat, or select the JSON below.':'The file download was blocked in this window. Open this file in Chrome or Edge and click Save to folder, or use Copy hand history / the JSON below.', 'warn');
+    return false;
+  }
+  function anchorAndMaybePicker(){
+    // Manual Export (user gesture): try the file picker first, then the anchor.
+    // Auto-export must not open a picker — it would hang without a gesture.
+    if(!auto && !ios && !downloadsBlocked() && typeof window.showSaveFilePicker==='function'){
+      return trySaveFilePicker(text, name).then(function(r){
+        if(r.ok) return succeed('Hand history saved with the file picker.');
+        return anchorPath();
+      });
+    }
+    return Promise.resolve(anchorPath());
+  }
+  function anchorPath(){
+    var blobOk=triggerAnchorDownload(text, name, false);
+    var dataOk=false;
+    if(!blobOk) dataOk=triggerAnchorDownload(text, name, true);
+    // "Fired" means the click ran in a context that is allowed to download.
+    // Inside a sandbox without allow-downloads the click is a silent no-op.
+    if((blobOk||dataOk) && !downloadsBlocked()){
+      return succeed(ios?('Hand history downloaded as '+name+'. Open it from the Downloads list, save it to Files, then attach it in Grok Bot chat.'):'Hand history saved to your Downloads');
+    }
+    return blockedMsg();
+  }
+
+  return Promise.resolve(dirHandleReady).then(function(){
+    return writeExportToFolder(text, name, {allowRequest:!auto});
+  }).then(function(r){
+    if(r&&r.ok) return succeed('Hand history saved to “'+r.folder+'” as '+r.name);
+    if(r&&r.reason==='permission' && dirHandle && auto){
+      setExportStatus('Click “Save to folder” to allow writing to “'+(dirHandle.name||'your folder')+'” again.', 'warn');
+      // Still offer the other paths; do not claim a folder write succeeded.
+    }
+    return anchorAndMaybePicker();
+  });
+}
+
+function copyHandHistory(){
+  var text=exportJsonText();
+  if(!text){ setExportStatus('No session to export.', 'err'); return Promise.resolve(false); }
+  fillExportBoxes(text);
+  function copied(){ setExportStatus(isIOS()?'Hand history copied. Paste it into Grok Bot chat (or use Export hand history to send the file).':'Hand history copied to the clipboard.', 'ok'); return true; }
+  function failed(){
+    var ta=document.querySelector('#endScreen:not(.hidden) .export-json')||document.querySelector('.export-json');
+    if(ta){ try{ ta.focus(); ta.select(); if(ta.setSelectionRange) ta.setSelectionRange(0, ta.value.length); }catch(e){} }
+    setExportStatus(isIOS()?'Copy was blocked. The JSON below is selected — tap it and choose Copy, or use Export hand history.':'Clipboard copy was blocked. Select the JSON below and copy it yourself, or paste it into chat.', 'warn');
+    return false;
+  }
+  function execCopy(){
+    var ta=document.querySelector('.export-json');
+    var temp=false;
+    if(!ta){
+      ta=document.createElement('textarea');
+      ta.value=text;
+      ta.style.position='fixed'; ta.style.left='-9999px';
+      document.body.appendChild(ta);
+      temp=true;
+    }
+    var ro=ta.hasAttribute('readonly');
+    ta.removeAttribute('readonly');
+    ta.focus();
+    ta.value=text;
+    ta.select();
+    if(ta.setSelectionRange) try{ ta.setSelectionRange(0, ta.value.length); }catch(e){}
+    var ok=false;
+    try{ ok=document.execCommand('copy'); }catch(e){ ok=false; }
+    if(ro) ta.setAttribute('readonly','');
+    if(temp && ta.parentNode) ta.parentNode.removeChild(ta);
+    return ok;
+  }
+  var clip=navigator.clipboard;
+  if(clip && typeof clip.writeText==='function'){
+    return clip.writeText(text).then(function(){ return copied(); }).catch(function(){
+      return execCopy()?copied():failed();
+    });
+  }
+  return Promise.resolve(execCopy()?copied():failed());
+}
+
+function maybeAutoExport(){
+  var s=current();
+  if(!s||!s.complete) return;
+  var text=exportJsonText();
+  var name=S.exportFilename(s);
+  fillExportBoxes(text);
+  backupExportToLocalStorage(text, name);
+  updateDownloadBanner();
+  if(autoExported){
+    setExportStatus('Hand history already exported. Use Copy hand history or the JSON below if you need it again.', 'ok');
+    return;
+  }
+  if(autoExportAttempted){
+    // Already tried (and did not succeed) — do not fire the anchor twice, keep fallbacks visible.
+    // If a folder was chosen since then, a click on Save to folder will write the file.
+    setExportStatus('The file download was blocked in this window. Open this file in Chrome or Edge and click Save to folder, or use Copy hand history / the JSON below.', 'warn');
+    return;
+  }
+  if(isIOS()){
+    // No user gesture here, so no share sheet; ask for one tap on Export.
+    setExportStatus('Session saved. Tap Export hand history, then '+IOS_SAVE_HINT.charAt(0).toLowerCase()+IOS_SAVE_HINT.slice(1), 'ok');
+    return;
+  }
+  autoExportAttempted=true;
+  Promise.resolve(dirHandleReady).then(function(){
+    return downloadExport({auto:true});
+  }).then(function(ok){
+    if(ok){
+      // Folder write is a confirmed success even inside some embeds.
+      // Anchor "success" is only trusted when downloads are not blocked.
+      autoExported=true;
+    } else {
+      autoExported=false;
+    }
+    save();
+  });
+}
+
+function attachSession(s){
+  if(!s) return;
+  sessionResult={state:s, public:{complete:!!s.complete, current:s.engine?S.publicState(s.engine):null, awaitingNext:!!s.awaitingNext}};
+  lastPublic=sessionResult.public;
+  if(s.complete) enterEnd();
+  else if(s.awaitingNext){ show('startScreen',false); show('endScreen',false); show('playScreen',true); render(); }
+  else enterPlay();
+}
+
+// Exposed for headless tests and for the Copy / Export controls.
+window.GdrPlayerUi={
+  attachSession:attachSession,
+  downloadExport:function(){ return downloadExport(); },
+  copyHandHistory:function(){ return copyHandHistory(); },
+  exportJsonText:exportJsonText,
+  status:function(){ var el=document.querySelector('.export-status:not(.hidden)')||document.querySelector('.export-status'); return el?el.textContent:''; },
+  statusKind:function(){ var el=document.querySelector('.export-status:not(.hidden)')||document.querySelector('.export-status'); if(!el) return ''; if(el.classList.contains('ok')) return 'ok'; if(el.classList.contains('warn')) return 'warn'; if(el.classList.contains('err')) return 'err'; return ''; },
+  autoExported:function(){ return !!autoExported; },
+  downloadsBlocked:downloadsBlocked,
+  isIOS:isIOS,
+  nextSessionNumber:function(){ return nextSessionNumber(); },
+  exportBoxValue:function(){ var el=document.querySelector('.export-json'); return el?el.value:''; },
+  openLog:function(){ setLogOpen(true); },
+  closeLog:function(){ setLogOpen(false); },
+  logOpen:function(){ return !!logOpen; },
+  scrollLogToEnd:scrollLogToEnd,
+  chooseSaveFolder:function(){ return chooseSaveFolder(); },
+  writeExportToFolder:function(opts){
+    var s=current();
+    if(!s) return Promise.resolve({ok:false, reason:'no-session'});
+    var text=exportJsonText(), name=S.exportFilename(s);
+    fillExportBoxes(text);
+    backupExportToLocalStorage(text, name);
+    return writeExportToFolder(text, name, opts||{allowRequest:true});
+  },
+  setTestDirectoryHandle:setTestDirectoryHandle,
+  savedFolderName:function(){ return (dirHandle&&dirHandle.name)||null; },
+  lastBackup:readExportBackup,
+  recommendedFolderPath:recommendedFolderPath,
+  folderInstructions:folderInstructions,
+  copyFolderPath:function(){ return copyFolderPath(); },
+  bannerVisible:function(){
+    var el=document.querySelector('.download-banner:not(.hidden)');
+    return !!el;
+  },
+  bannerText:function(){
+    var el=document.querySelector('.download-banner:not(.hidden) .download-banner-msg');
+    return el?el.textContent:'';
+  }
+};
+
+
+function toggleLog(){
+  setLogOpen(!logOpen);
+}
+
+function goStart(){
+  show('playScreen',false); show('endScreen',false); show('startScreen',true);
+  if($('sessNum')) $('sessNum').value=String(nextSessionNumber());
+  var saved=loadSaved();
+  var resume=$('btnResume');
+  if(saved && saved.state && !saved.state.complete){
+    resume.classList.remove('hidden');
+    resume.textContent='Resume hand '+(saved.state.engine.handNo)+' of '+(saved.state.handLimit);
+  } else resume.classList.add('hidden');
+}
+
+function bind(){
+  $('btnStart').addEventListener('click', startNew);
+  $('btnResume').addEventListener('click', resumeSaved);
+  $('btnExport').addEventListener('click', function(){ downloadExport(); });
+  $('btnExport2').addEventListener('click', function(){ downloadExport(); });
+  if($('btnCopy')) $('btnCopy').addEventListener('click', function(){ copyHandHistory(); });
+  if($('btnCopy2')) $('btnCopy2').addEventListener('click', function(){ copyHandHistory(); });
+  if($('btnCopyLive')) $('btnCopyLive').addEventListener('click', function(){ copyHandHistory(); });
+  if($('btnSelectJson')) $('btnSelectJson').addEventListener('click', function(){
+    var ta=document.querySelector('#endScreen .export-json')||document.querySelector('.export-json');
+    if(!ta) return;
+    ta.focus(); ta.select();
+    if(ta.setSelectionRange) try{ ta.setSelectionRange(0, ta.value.length); }catch(e){}
+  });
+  document.querySelectorAll('.btnSaveFolder').forEach(function(el){
+    el.addEventListener('click', function(){ chooseSaveFolder(); });
+  });
+  document.querySelectorAll('.btnCopyFolderPath').forEach(function(el){
+    el.addEventListener('click', function(){ copyFolderPath(); });
+  });
+  $('btnLog').addEventListener('click', toggleLog);
+  $('btnNew').addEventListener('click', function(){
+    if(current() && !current().complete){
+      if(!confirm('Leave this rehearsal? You can export the hand history first.')) return;
+    }
+    goStart();
+  });
+  $('customGo').addEventListener('click', submitCustom);
+  $('customAmt').addEventListener('keydown', function(ev){ if(ev.key==='Enter'){ ev.preventDefault(); submitCustom(); } });
+  $('btnHow').addEventListener('click', function(){
+    $('how').classList.toggle('hidden');
+  });
+  window.addEventListener('resize', function(){ if(current()) renderTable(); });
+  loadDirHandle();
+  updateDownloadBanner();
+  applyIosUi();
+  goStart();
+}
+
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bind);
+else bind();
+})();
+
+</script>
+
+<script>
+/* GDR PWA: offline app shell. Registered only on https or localhost. */
+(function(){
+  if(!('serviceWorker' in navigator)) return;
+  var okProto = location.protocol==='https:' || location.hostname==='localhost' || location.hostname==='127.0.0.1';
+  if(!okProto) return;
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js', {scope:'./'}).then(function(reg){
+      window.__gdrSwReg = reg;
+    }).catch(function(e){ window.__gdrSwError = String(e); });
+  });
+})();
+</script>
+</body>
+</html>
