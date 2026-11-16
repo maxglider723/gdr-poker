@@ -54,43 +54,7 @@ header{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:6px 10px;he
 .card.win{box-shadow:0 0 0 2px var(--gold),0 0 12px var(--gold)}
 .card.dim{filter:brightness(.55)}
 #board .card{--cw:var(--bw)}
-.seat{position:absolute;transform:translate(-50%,-50%);width:86px;z-index:4;transition:opacity .3s,filter .3s}
-.seat .plate{position:relative;background:rgba(8,14,11,.86);border:1px solid #2f4a3c;border-radius:10px;padding:3px 4px 4px;text-align:center;transition:box-shadow .2s,border-color .2s}
-.seat .pos{font-size:9px;font-weight:800;letter-spacing:.6px;color:#ffe9a8;line-height:1.15;text-transform:uppercase;text-shadow:0 1px 2px #000}
-.seat .nm{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.seat .stk{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
 .stk.up{color:var(--up)} .stk.down{color:var(--down)}
-.seat .mini{position:absolute;left:50%;top:-20px;transform:translateX(-50%);display:flex;gap:2px;z-index:-1}
-.seat .mini .card{--cw:18px}
-.seat .shown{position:absolute;left:50%;bottom:calc(100% - 4px);transform:translateX(-50%);display:flex;gap:2px;z-index:6}
-.seat .shown .card{--cw:28px}
-.seat .shown-hand{position:absolute;left:50%;bottom:calc(100% + 36px);transform:translateX(-50%);font-size:10px;font-weight:800;color:#ffe9a8;background:rgba(0,0,0,.65);padding:1px 6px;border-radius:8px;white-space:nowrap;z-index:7;text-shadow:0 1px 2px #000;max-width:130px;overflow:hidden;text-overflow:ellipsis}
-.seat .shown-hand.win{color:#111;background:var(--gold)}
-.seat.winner .plate{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold),0 0 14px rgba(245,197,66,.45)}
-.seat.active .plate{border-color:#4cff8e;box-shadow:0 0 0 2px #36e07a,0 0 16px 4px rgba(64,255,130,.65);animation:pulse 1.2s infinite}
-@keyframes pulse{50%{box-shadow:0 0 0 2px #36e07a,0 0 24px 8px rgba(64,255,130,.35)}}
-.seat.folded{opacity:.42;filter:grayscale(.7)}
-.seat.out{display:none}
-.seat .tag{position:absolute;left:50%;top:100%;transform:translate(-50%,3px);font-size:10px;font-weight:700;background:#000a;padding:1px 6px;border-radius:8px;white-space:nowrap;color:#dfe;z-index:5}
-.seat .tag.agg{color:#111;background:var(--agg);box-shadow:0 0 0 1px #fff8}
-.seat .tag.fold{color:#aaa}
-.seat.aggressor .plate{border-color:var(--agg);box-shadow:0 0 0 3px var(--agg),0 0 14px rgba(255,122,0,.55);border-width:2px}
-.seat.aggressor .stk{color:var(--agg)}
-.seat.hero{width:150px;z-index:5}
-.seat.hero .plate{border-color:var(--gold);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px 6px;padding:4px 8px}
-.seat.hero .pos{width:100%;font-size:11px;order:-1}
-.seat.hero .plate::before{content:"";width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:11px solid var(--gold);filter:drop-shadow(0 0 3px var(--gold));flex:0 0 auto}
-.seat.hero .nm{font-size:13px} .seat.hero .stk{font-size:14px}
-.hero-cards{display:flex;justify-content:center;gap:6px;margin-bottom:4px;min-height:calc(var(--hw)*1.4)}
-.hero-cards .card{--cw:var(--hw)}
-.hero-hand{font-size:11px;color:#ffe9a8;text-align:center;min-height:14px;margin-bottom:2px;text-shadow:0 1px 2px #000;white-space:nowrap}
-.chip{position:absolute;transform:translate(-50%,-50%);z-index:3;display:flex;align-items:center;gap:3px;font-size:11px;font-weight:700;background:rgba(0,0,0,.55);padding:1px 6px 1px 2px;border-radius:10px;white-space:nowrap}
-.chip i{width:13px;height:13px;border-radius:50%;background:radial-gradient(circle,#fff 0 25%,#e53935 26% 60%,#fff 61% 68%,#e53935 69%);display:inline-block}
-.chip.agg-amt{background:var(--agg);color:#111;font-weight:800}
-.dbtn,.blind{position:absolute;transform:translate(-50%,-50%);z-index:3;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900}
-.dbtn{width:20px;height:20px;background:#fff;color:#111;font-size:11px;box-shadow:0 1px 4px #000}
-.blind{width:18px;height:18px;font-size:8px;color:#fff;background:#3949ab;border:1px solid #fff8}
-.blind.bb{background:#6a1b9a}
 #ticker{flex:0 0 auto;margin:2px 8px 0;background:var(--panel);border:1px solid #213229;border-radius:10px;padding:6px 10px;font-size:13px;min-height:32px;display:flex;align-items:center;gap:8px}
 #ticker .txt{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 #ticker .lg{flex:0 0 auto;font-size:12px;color:var(--mut);background:none;border:1px solid #2c3f35;border-radius:8px;padding:2px 8px}
@@ -144,9 +108,6 @@ header{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:6px 10px;he
 #endScreen .pnl.up{color:var(--up)} #endScreen .pnl.down{color:var(--down)}
 .hidden{display:none !important}
 @media (max-width:640px){
-  #tableWrap{--bw:32px;--hw:48px}
-  .seat{width:70px} .seat.hero{width:120px}
-  .seat .nm{font-size:10px}
   #startScreen .facts{grid-template-columns:1fr}
   #playBody.log-open #logPane.open{flex:0 0 148px;height:148px;max-height:148px}
 }
@@ -189,61 +150,127 @@ button,input,textarea,select,.abtn,.hbtn{touch-action:manipulation}
 input,textarea,select{font-size:16px}
 .custom input{font-size:16px}
 .export-json{font-size:12px}
-/* Fluid table pieces */
-#tableWrap{--bw:clamp(28px,8.4vw,44px);--hw:clamp(40px,11.5vw,58px)}
-.seat{width:clamp(66px,19vw,86px)}
-.seat.hero{width:clamp(112px,32vw,150px)}
-.seat .nm{font-size:clamp(10px,2.9vw,11px)}
-.seat .stk{font-size:clamp(11px,3.1vw,12px)}
-#potBox{font-size:clamp(12px,3.4vw,13px)}
 /* Start/end screens scroll from the top when taller than the screen */
 #startScreen,#endScreen{justify-content:flex-start;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 #startScreen>:first-child,#endScreen>:first-child{margin-top:auto}
 #startScreen>:last-child,#endScreen>:last-child{margin-bottom:auto}
-/* Live feed: 3+ lines, newest at the bottom, older lines scroll inside */
-#ticker{align-items:stretch;padding:4px 6px 4px 10px;min-height:0}
-#ticker .txt{white-space:normal;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
-  font-size:13px;line-height:1.35;height:calc(3 * 1.35em + 4px);min-height:calc(3 * 1.35em + 4px)}
-#ticker .txt .ln{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#ticker .txt .ln:last-child{color:var(--txt);font-weight:650}
-#ticker .txt .ln:not(:last-child){color:#c4d3ca}
-/* Bottom bar: hero cards (phones only), prompt, actions */
-#bottomBar{flex:0 0 auto;display:flex;flex-direction:column;min-height:0}
-#heroBar{display:none}
-.hb-cards{display:flex;gap:4px}
-.hb-cards .card{--cw:clamp(38px,11vw,50px)}
-.hb-txt{min-width:0}
-.hb-hand{font-size:13px;font-weight:800;color:#ffe9a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hb-me{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wide{display:inline}
 #liveExportPanel{max-height:34vh;max-height:34dvh;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+
+/* ===================== v2 table: clean, readable, no overlaps ===================== */
+/* Header: session info on the left (two short lines on phones), buttons on the right. */
+#sess{display:flex;justify-content:center;gap:0;font-size:14px}
+#sess .s1{font-weight:700;color:var(--txt)}
+#sess .s2{color:var(--mut)}
+#sess b{font-weight:800}
+/* Table area: seats, chips and the dealer disc are placed in px by layoutTable(). */
+#tableWrap{--bw:44px;--hw:56px;--sw:104px;margin:0 6px}
+#felt{left:11%;right:11%;top:9%;bottom:9%;border-width:9px}
+#feltLogo{top:70%;font-size:11px}
+#board{left:50%;top:45%;gap:4px}
+#potBox{top:62%;font-size:15px;padding:3px 12px;border-radius:14px;background:rgba(0,0,0,.5)}
+#potBox small{font-size:13px;margin-left:2px;text-transform:capitalize}
+.seat{position:absolute;left:0;top:0;width:var(--sw);display:flex;flex-direction:column;align-items:center;z-index:4;transition:opacity .25s,filter .25s}
+.seat .hole{position:relative;z-index:1;display:flex;justify-content:center;gap:2px;height:26px;margin-bottom:-6px}
+.seat .hole.mini .card{--cw:19px}
+.seat .hole.shown{height:41px;margin-bottom:-2px;z-index:3}
+.seat .hole.shown .card{--cw:29px}
+.seat .plate{position:relative;z-index:2;width:100%;background:rgba(8,14,11,.92);border:1px solid #35503f;border-radius:11px;padding:3px 4px 5px;text-align:center;transition:box-shadow .2s,border-color .2s}
+.seat .nm{font-size:14px;line-height:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat .meta{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:2px;line-height:17px}
+.seat .pos{font-size:11.5px;font-weight:800;letter-spacing:.4px;color:#ffe9a8;line-height:15px;text-transform:uppercase;white-space:nowrap}
+.seat .stk{display:block;line-height:17px}
+.seat.hero .pos{display:inline-block;background:rgba(255,233,168,.13);border-radius:5px;padding:0 5px;line-height:17px;font-size:12px}
+.seat.hero .stk{display:inline}
+.seat .stk{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stk.up{color:var(--up)} .stk.down{color:var(--down)}
+.seat .tag{position:relative;z-index:3;margin-top:-8px;max-width:100%;height:19px;line-height:17px;padding:0 8px;border-radius:10px;font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:#e8f1ec;background:#22342a;border:1px solid #3d5a49}
+.seat .tag.agg{color:#111;background:var(--agg);border-color:#ffb066}
+.seat .tag.allin{color:#fff;background:#b3261e;border-color:#ff7b73}
+.seat .tag.hand{color:#ffe9a8;background:#1d2a23;border-color:#4d5f3a}
+.seat .tag.win{color:#111;background:var(--gold);border-color:#fff3c4}
+.seat.folded{opacity:.38;filter:grayscale(.8)}
+.seat.out{display:none}
+.seat.active .plate{border-color:#4cff8e;box-shadow:0 0 0 2px #36e07a,0 0 14px 3px rgba(64,255,130,.55)}
+.seat.aggressor .plate{border-color:var(--agg);box-shadow:0 0 0 2px var(--agg)}
+.seat.aggressor .stk{color:var(--agg)}
+.seat.winner .plate{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold),0 0 12px rgba(245,197,66,.45)}
+/* Max's seat: cards beside a compact plate */
+.seat.hero{width:auto;flex-direction:row;align-items:center;gap:6px;z-index:5}
+.seat.hero .hole{height:auto;margin:0;gap:4px}
+.seat.hero .hole .card{--cw:var(--hw)}
+.seat.hero .hole:empty{display:none}
+.seat.hero .plate{width:auto;min-width:96px;max-width:150px;border-color:var(--gold);padding:5px 9px 6px;text-align:left}
+.seat.hero .hero-hand{font-size:14px;line-height:18px;font-weight:800;color:#ffe9a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:18px}
+.seat.hero .nm{font-size:14px}
+.seat.hero .meta{justify-content:flex-start}
+.seat.hero .stk{font-size:15px}
+.seat.hero .tag{position:absolute;left:50%;top:100%;transform:translate(-50%,-10px);margin:0}
+.seat.hero.active .plate{border-color:#4cff8e}
+/* Compact seats when the table area is very short (set by layoutTable) */
+#tableWrap.tight .seat .hole.mini,#tableWrap.tight .seat .hole.empty{height:8px;margin-bottom:-4px;overflow:hidden}
+#tableWrap.tight .seat .hole.mini .card{display:none}
+#tableWrap.tight .seat .hole.shown{height:34px}
+#tableWrap.tight .seat .hole.shown .card{--cw:24px}
+#tableWrap.tight .seat .pos{line-height:13px}
+#tableWrap.tight .seat.hero .hole .card{--cw:calc(var(--hw) - 6px)}
+/* Bet chips and the dealer disc */
+.chip{position:absolute;transform:translate(-50%,-50%);z-index:3;display:flex;align-items:center;gap:4px;height:23px;font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums;
+  background:rgba(0,0,0,.62);padding:0 8px 0 3px;border-radius:12px;white-space:nowrap;border:1px solid rgba(255,255,255,.12)}
+.chip i{width:15px;height:15px;border-radius:50%;background:radial-gradient(circle,#fff 0 25%,#e53935 26% 60%,#fff 61% 68%,#e53935 69%);display:inline-block;flex:0 0 auto}
+.chip.agg-amt{background:var(--agg);color:#111;border-color:#ffb066}
+.dbtn{position:absolute;transform:translate(-50%,-50%);z-index:3;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:#fff;color:#111;font-size:12px;font-weight:900;box-shadow:0 1px 4px #000;border:2px solid #d9d9d9}
+/* Board cards */
+#board .card{--cw:var(--bw)}
+#board .slot{width:var(--bw);height:calc(var(--bw)*1.4)}
+/* Live feed: newest line at the bottom; the box is an exact number of lines so no line is cut */
+#ticker{flex:0 0 auto;align-items:stretch;margin:4px 8px 0;padding:5px 6px 5px 12px;min-height:0;border-radius:12px}
+#ticker .txt{white-space:normal;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  font-size:14px;line-height:20px;height:60px;min-height:60px;padding:0}
+#ticker .txt .ln{height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ticker .txt .ln:last-child{color:var(--txt);font-weight:650}
+#ticker .txt .ln:not(:last-child){color:#b9c9bf}
+/* Full hand log: fade the top edge so a partly scrolled line never shows half-cut */
+#logPane.open{-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 18px);mask-image:linear-gradient(to bottom,transparent 0,#000 18px);padding-top:14px}
+/* Bottom bar: prompt and actions (Max's cards live in his seat now) */
+#bottomBar{flex:0 0 auto;display:flex;flex-direction:column;min-height:0}
+#heroBar{display:none}
+#prompt{font-size:14px;color:#c6d4cb;padding:6px 10px 0;min-height:0;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+#controls{gap:6px;padding:6px 8px 8px}
+.err{min-height:0}
+.err:empty{display:none}
+.abtn{font-size:15px}
+.abtn.nexthand{font-size:18px}
 
 /* ---- Phones, portrait (≈ 320–640px wide) ---- */
 @media (max-width:640px){
   header{flex-wrap:wrap;height:auto;gap:6px;padding:4px 8px}
   header .brand{display:none}
-  #sess{flex:1 0 100%;order:-1;font-size:12px;line-height:18px}
-  header .hbtn{flex:1 1 0;min-width:0;min-height:44px;padding:0 4px;font-size:13px;overflow:hidden;text-overflow:ellipsis}
+  #sess{flex:1 1 0;min-width:0;flex-direction:column;align-items:flex-start;text-align:left;font-size:13px;line-height:17px}
+  #sess .s1,#sess .s2{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #sess .sep{display:none}
+  header .hbtn{flex:0 0 auto;min-width:44px;min-height:44px;padding:0 10px;font-size:14px}
   .wide{display:none}
   .export-panel .hbtn,#endScreen .hbtn,.start-row .hbtn,.download-banner .hbtn,#btnHow{min-height:44px;padding:0 14px}
-  #tableWrap{margin:0 2px}
-  #felt{left:7%;right:7%;top:5%;bottom:5%;border-width:8px}
-  #ticker{margin:2px 6px 0}
-  #bottomBar{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:2px 8px;padding:4px 6px 2px}
-  #heroBar{display:contents}
-  #heroBar .hb-cards{grid-column:1;grid-row:1/3;align-self:center}
-  #heroBar .hb-txt{grid-column:2;grid-row:1}
-  #prompt{grid-column:2;grid-row:2;padding:0;font-size:12px;min-height:16px;line-height:1.3}
-  #controls{grid-column:1/-1;padding:4px 0 2px}
-  .seat.hero .hero-cards,.seat.hero .hero-hand{display:none}
-  .seat.hero{width:clamp(96px,28vw,130px)}
-  .seat.hero .plate::before{display:none}
-  .row>.abtn{min-width:0;min-height:48px;overflow-wrap:anywhere;font-size:14px}
+  #tableWrap{--bw:clamp(31px,8.4vw,40px);--hw:clamp(40px,10.6vw,48px);--sw:clamp(78px,20.8vw,94px);margin:0 2px}
+  #felt{left:13%;right:13%;top:12%;bottom:12%;border-width:8px}
+  .seat.hero .nm{display:none}
+  #feltLogo{display:none}
+  .seat.hero .plate{min-width:0;max-width:calc(100vw - 2*var(--sw) - 2*var(--hw) - 24px);padding:5px 6px 6px}
+  .seat.hero .pos{padding:0 4px}
+  #ticker{margin:4px 6px 0}
+  #bottomBar{padding:0 6px 2px}
+  #prompt{padding:6px 4px 0;font-size:13.5px}
+  #controls{padding:6px 0 4px}
+  .row>.abtn{min-width:0;min-height:48px;overflow-wrap:anywhere;font-size:15px}
   .custom{max-width:100%}
   .custom input,.custom button{min-height:44px}
   #customAmt{min-width:0}
-  .export-json{min-height:96px}
-  #playBody.log-open #logPane.open{flex:0 0 clamp(96px,20dvh,168px);height:clamp(96px,20dvh,168px);max-height:clamp(96px,20dvh,168px);margin:4px 6px}
+  .export-json{min-height:96px;font-size:16px;line-height:1.35}
+  #playBody.log-open #ticker{display:none}
+  #playBody.log-open #logPane.open{flex:0 0 clamp(100px,17dvh,190px);height:clamp(100px,17dvh,190px);max-height:clamp(100px,17dvh,190px);margin:4px 6px;font-size:13.5px}
   #startScreen,#endScreen{padding:16px 14px;gap:10px}
   #startScreen h1,#endScreen h1{font-size:24px}
   #startScreen .facts{grid-template-columns:1fr}
@@ -252,67 +279,59 @@ input,textarea,select{font-size:16px}
   #app:has(#endScreen:not(.hidden)) #liveExportPanel{display:none}
   #app:has(#endScreen:not(.hidden)) #playScreen{flex:0 0 auto}
 }
-/* Very short portrait phones (iPhone SE 375×667): tighten a little */
+/* Tall phones (iPhone 13 and up): four feed lines */
+@media (max-width:640px) and (min-height:800px){
+  #ticker .txt{height:80px;min-height:80px}
+  #tableWrap{--bw:clamp(31px,8.8vw,42px);--hw:clamp(40px,11.4vw,52px)}
+}
+/* Narrow phones (iPhone SE / mini): slightly smaller hole cards for Max so his stack fits */
+@media (max-width:409px){
+  #tableWrap{--hw:40px}
+  .seat.hero{gap:5px}
+}
+@media (max-width:389px){
+  #tableWrap{--hw:37px}
+}
+/* Very short portrait phones (iPhone SE 375×667) */
 @media (max-width:640px) and (max-height:700px){
-  #ticker .txt{font-size:12px}
-  .row>.abtn{min-height:44px;font-size:13px}
-  .hb-cards .card{--cw:36px}
+  .row>.abtn{min-height:44px;font-size:14px}
 }
 
-/* ---- Phones, landscape (short screens) ---- */
+/* ---- Phones, landscape (short screens): table left, feed + actions right ---- */
 @media (orientation:landscape) and (max-height:500px){
   header{height:auto;padding:2px 8px;gap:6px}
   header .hbtn{min-height:44px;height:auto}
+  #sess{font-size:13px}
   .wide{display:none}
-  #main{flex-direction:row}
-  #playBody{flex:1 1 auto;min-width:0}
-  #bottomBar{flex:0 0 clamp(280px,40vw,400px);overflow-y:auto;-webkit-overflow-scrolling:touch;justify-content:flex-end;padding:0 8px 2px 0;
-    display:grid;grid-template-columns:auto minmax(0,1fr);align-content:end;gap:2px 8px}
-  #heroBar{display:contents}
-  #heroBar .hb-cards{grid-column:1;grid-row:1/3;align-self:center}
-  #heroBar .hb-txt{grid-column:2;grid-row:1}
-  #prompt{grid-column:2;grid-row:2;padding:0;font-size:12px}
-  #controls{grid-column:1/-1;padding:4px 0}
-  .row>.abtn{min-height:44px;min-width:0;font-size:13px}
+  .seat.hero .nm{display:none}
+  #feltLogo{display:none}
+  #main{display:grid;grid-template-columns:minmax(0,1fr) clamp(270px,36vw,360px);grid-template-rows:auto minmax(0,1fr);min-height:0}
+  #playBody,#tableCol{display:contents}
+  #tableWrap{grid-column:1;grid-row:1/3;--bw:clamp(30px,7.4vh,40px);--hw:clamp(38px,9.6vh,48px);--sw:clamp(80px,10vw,96px);margin:0 4px 2px}
+  #felt{left:10%;right:10%;top:12%;bottom:12%}
+  #ticker{grid-column:2;grid-row:1;margin:2px 8px 0 0}
+  #logPane{grid-column:2;grid-row:1}
+  #bottomBar{grid-column:2;grid-row:2;overflow-y:auto;-webkit-overflow-scrolling:touch;justify-content:flex-end;padding:0 8px 2px 0}
+  #prompt{padding:4px 2px 0;font-size:13px}
+  #controls{padding:4px 0}
+  .row>.abtn{min-height:44px;min-width:0;font-size:14px}
   .custom input,.custom button{min-height:44px}
-  .seat.hero .hero-cards,.seat.hero .hero-hand{display:none}
-  .seat.hero .plate::before{display:none}
-  #tableWrap{--bw:clamp(26px,7vh,38px)}
-  .seat{width:clamp(64px,11vw,80px)}
-  .seat.hero{width:clamp(96px,14vw,130px)}
-  #felt{top:6%;bottom:6%}
-  #playBody.log-open{flex-direction:row}
-  #playBody.log-open #logPane.open{flex:0 0 220px;width:220px;height:auto;max-height:none;margin:0 4px}
+  #playBody.log-open #ticker{display:none}
+  #playBody.log-open #logPane.open{width:auto;height:clamp(96px,30dvh,140px);max-height:clamp(96px,30dvh,140px);margin:2px 8px 0 0}
   #app:has(#endScreen:not(.hidden)) #main,
   #app:has(#endScreen:not(.hidden)) #liveExportPanel{display:none}
   #app:has(#endScreen:not(.hidden)) #playScreen{flex:0 0 auto}
   #startScreen,#endScreen{padding:12px 16px}
+  #endScreen .hbtn{min-height:44px}
+  .export-json{font-size:16px;line-height:1.35}
 }
 
 /* ---- Desktop: scale up ---- */
 @media (min-width:1100px) and (min-height:760px){
-  #tableWrap{--bw:46px;--hw:62px}
-  .seat{width:92px} .seat.hero{width:160px}
-  .seat .nm{font-size:12px} .seat .stk{font-size:13px}
-  #potBox{font-size:14px}
-  .abtn{font-size:15px}
-}
-/* Phones: an open hand log takes the feed's place (it already shows every line). */
-@media (max-width:640px){
-  #playBody.log-open #ticker{display:none}
-  #playBody.log-open #logPane.open{flex:0 0 clamp(110px,22dvh,200px);height:clamp(110px,22dvh,200px);max-height:clamp(110px,22dvh,200px)}
-  .export-json{font-size:16px;line-height:1.35}
-}
-/* Tall phones (iPhone 13 and up): four feed lines */
-@media (max-width:640px) and (min-height:800px){
-  #ticker .txt{height:calc(4 * 1.35em + 4px);min-height:calc(4 * 1.35em + 4px)}
-}
-@media (orientation:landscape) and (max-height:500px){
-  #playBody.log-open{flex-direction:column}
-  #playBody.log-open #ticker{display:none}
-  #playBody.log-open #logPane.open{flex:0 0 clamp(96px,30dvh,140px);width:auto;height:clamp(96px,30dvh,140px);max-height:clamp(96px,30dvh,140px);margin:2px 6px}
-  #endScreen .hbtn{min-height:44px}
-  .export-json{font-size:16px;line-height:1.35}
+  #tableWrap{--bw:50px;--hw:64px;--sw:112px}
+  .seat .nm{font-size:15px} .seat .stk{font-size:15px}
+  #potBox{font-size:16px}
+  .abtn{font-size:16px}
 }
 
 </style>
@@ -352,7 +371,7 @@ input,textarea,select{font-size:16px}
     <header>
       <div class="brand">GDR <span>Poker</span></div>
       <div id="sess"></div>
-      <button type="button" class="hbtn" id="btnLog">Hand log</button>
+      <button type="button" class="hbtn" id="btnLog"><span class="wide">Hand </span>Log</button>
       <button type="button" class="hbtn primary" id="btnExport">Export</button>
       <button type="button" class="hbtn btnSaveFolder">Save to folder</button>
       <button type="button" class="hbtn" id="btnCopyLive">Copy<span class="wide"> hand history</span></button>
@@ -1628,15 +1647,105 @@ function posLabel(st,i,liveIdx){
   else tail=tail.slice(tail.length-(rest-1));
   return tail[k-1]||'MP';
 }
-function seatPos(k,n,wrap){
-  var w=wrap.clientWidth, h=wrap.clientHeight, land=w>h*1.15, tall=h>w*1.08;
-  var ang=Math.PI/2 + 2*Math.PI*k/n;
-  var rx=land?41:39, ry=land?39:39.5;
-  // Narrow tall phones: a taller oval; side seats hug the rail.
-  if(tall){ rx=38; ry=41; }
-  var x=50+rx*Math.cos(ang), y=50+ry*Math.sin(ang);
-  if(k===0) y=land?83:(tall?89:84);
-  return {x:x,y:y,land:land,tall:tall};
+function shortName(n){
+  // Seat labels: "Lauren Alamo" -> "Lauren A." so names fit a phone seat.
+  var parts=String(n||'').trim().split(/\s+/);
+  return parts.length>1 ? parts[0]+' '+parts[parts.length-1].charAt(0)+'.' : String(n||'');
+}
+function shortHand(name){
+  // Compact made-hand names for seat badges (the feed keeps the full name).
+  var m;
+  if(!name) return '';
+  if(/^Royal Flush/.test(name)) return 'Royal Flush';
+  if(/^Straight Flush/.test(name)) return 'Straight Flush';
+  if((m=/^Four of a Kind, (\w+)/.exec(name))) return 'Quad '+m[1];
+  if((m=/^Full House, (\w+) full/.exec(name))) return m[1]+' full';
+  if(/^Flush/.test(name)) return 'Flush';
+  if(/^Straight/.test(name)) return 'Straight';
+  if((m=/^Three of a Kind, (\w+)/.exec(name))) return 'Trip '+m[1];
+  if(/^Two Pair/.test(name)) return 'Two Pair';
+  if((m=/^Pair of (\w+)/.exec(name))) return 'Pair of '+m[1];
+  if((m=/^High card, (\w+)/.exec(name))) return m[1]+' high';
+  if((m=/^(\w+)-high$/.exec(name))) return m[1]+' high';
+  return name;
+}
+function actionVerb(last){
+  // Seat badge shows the verb only; the bet chip already shows the amount.
+  if(!last) return '';
+  if(/^All-in/.test(last)) return 'All-in';
+  if(/^Raise/.test(last)) return 'Raise';
+  if(/^Bet/.test(last)) return 'Bet';
+  if(/^Call/.test(last)) return 'Call';
+  if(/^Check/.test(last)) return 'Check';
+  return '';
+}
+function rectOf(x,y,w,h){ return {l:x-w/2,t:y-h/2,r:x+w/2,b:y+h/2}; }
+function hits(a,b,gap){ gap=gap||0; return a.l<b.r+gap && b.l<a.r+gap && a.t<b.b+gap && b.t<a.b+gap; }
+function inside(a,W,H,pad){ return a.l>=pad && a.t>=pad && a.r<=W-pad && a.b<=H-pad; }
+/* Seat centres in px. Portrait (phones): a 3-4-3 ring with Max at the bottom centre
+   and the top row spread across the full width, so nothing stacks. Wide screens:
+   an ellipse. Every seat box is kept fully inside the table area. */
+function seatCenters(n, W, H, sizes, heroSize, heroInTable){
+  var pad=3, i, out=[], m=n-1;
+  var sw=0, sh=0;
+  for(i=1;i<n;i++){ sw=Math.max(sw,sizes[i].w); sh=Math.max(sh,sizes[i].h); }
+  var hw=heroSize.w, hh=heroSize.h;
+  var xL=pad+sw/2, xR=W-pad-sw/2, yT=pad+sh/2, yB=H-pad-sh/2;
+  out[0]={x:W/2, y:heroInTable?H-pad-hh/2:H-pad};
+  var wide=W>H*1.15 && W>=560;
+  // Eight slots, clockwise from Max: bottom-left, mid-left, four across the top, mid-right, bottom-right.
+  // Coordinates are -1..1 across the area seat centres may use. Portrait pushes seats to the
+  // edges; wide screens pull the corners in to follow the oval.
+  var midV=wide?0.2:Math.max(-1+2*(sh+4)/Math.max(1,yB-yT), 0.1);
+  var arcV=wide?0.18:Math.min(14, sh*0.18)*2/Math.max(1,yB-yT);
+  var cU=wide?0.84:1, bU=wide?0.72:1, tU=wide?0.3:1/3;
+  var slots=[[-bU,1],[-1,midV],[-cU,-1+arcV],[-tU,-1],[tU,-1],[cU,-1+arcV],[1,midV],[bU,1]].map(function(uv){
+    return {x:(xL+xR)/2+uv[0]*(xR-xL)/2, y:(yT+yB)/2+uv[1]*(yB-yT)/2};
+  });
+  var used=[];
+  for(i=1;i<=m;i++){
+    var si=m>=8?i-1:Math.min(7,Math.max(0,Math.round(i*9/(m+1))-1));
+    while(used.indexOf(si)>=0 && si<7) si++;
+    used.push(si);
+    out[i]=slots[si];
+  }
+  return out;
+}
+/* Spot for a chip or the dealer disc: the free place closest to its own seat, on the
+   side facing the pot, and nearer to that seat than to any other seat. */
+function rectDist(x,y,r){ var dx=Math.max(r.l-x,0,x-r.r), dy=Math.max(r.t-y,0,y-r.b); return Math.sqrt(dx*dx+dy*dy); }
+function placeNear(seatR, cx, cy, w, h, obstacles, W, H, seatRects, own){
+  var sx=(seatR.l+seatR.r)/2, sy=(seatR.t+seatR.b)/2;
+  var dx=cx-sx, dy=cy-sy, d=Math.sqrt(dx*dx+dy*dy)||1; dx/=d; dy/=d;
+  var best=null, bs=1e18, x, y, q;
+  for(y=h/2+2; y<=H-h/2-2; y+=3){
+    for(x=w/2+2; x<=W-w/2-2; x+=3){
+      var r=rectOf(x,y,w,h), free=true;
+      for(q=0;q<obstacles.length;q++){ if(hits(r,obstacles[q],3)){ free=false; break; } }
+      if(!free) continue;
+      var dOwn=rectDist(x,y,seatR);
+      var mine=true;
+      for(q=0;q<seatRects.length;q++){ if(q!==own && seatRects[q] && rectDist(x,y,seatRects[q])<dOwn+6){ mine=false; break; } }
+      if(!mine) continue;
+      var vx=x-sx, vy=y-sy, along=vx*dx+vy*dy, lat=Math.abs(-vx*dy+vy*dx);
+      var score=dOwn+0.45*lat+(along<0?200:0);
+      if(score<bs){ bs=score; best={x:x,y:y,r:r}; }
+    }
+  }
+  if(!best){
+    // Nothing qualifies: nearest free spot to the seat, ignoring the ownership rule.
+    for(y=h/2+2; y<=H-h/2-2; y+=3){
+      for(x=w/2+2; x<=W-w/2-2; x+=3){
+        var r2=rectOf(x,y,w,h), ok2=true;
+        for(q=0;q<obstacles.length;q++){ if(hits(r2,obstacles[q],2)){ ok2=false; break; } }
+        if(!ok2) continue;
+        var sc=rectDist(x,y,seatR);
+        if(sc<bs){ bs=sc; best={x:x,y:y,r:r2}; }
+      }
+    }
+  }
+  if(!best){ var x0=sx+dx*40, y0=sy+dy*40; best={x:x0,y:y0,r:rectOf(x0,y0,w,h)}; }
+  return best;
 }
 
 function current(){ return sessionResult && sessionResult.state; }
@@ -1742,9 +1851,9 @@ function showEndBanner(){
 function render(){
   var s=current(); if(!s) return;
   renderHeader();
-  renderTable();
-  renderLog();
   renderControls();
+  renderLog();
+  renderTable();
 }
 
 function renderHeader(){
@@ -1755,76 +1864,70 @@ function renderHeader(){
   net=hero.stack-S.BUYIN;
   if(inHand) net=hero.stack-S.BUYIN; // stack already reflects street contributions? stack is remaining, contrib is in pot. Session net should use stack+contrib vs starting? For display during a hand, remaining+contrib - 25 is this-session including current pot share. Simpler: stack - 25 after settlement; during hand show stack (behind) and mention pot.
   var cls=net>0?'up':net<0?'down':'';
-  var label='Hand '+st.handNo+' of '+s.handLimit;
+  var label='Hand '+st.handNo+'/'+s.handLimit;
   if(s.session) label='GDR'+s.session+' · '+label;
-  $('sess').innerHTML=esc(label)+' · Net <b class="'+cls+'">'+esc(E.fmtSigned(net))+'</b> · '+esc(fmt(hero.stack));
+  $('sess').innerHTML='<span class="s1">'+esc(label)+'</span><span class="sep">&nbsp;·&nbsp;</span><span class="s2">Net <b class="'+cls+'">'+esc(E.fmtSigned(net))+'</b> · '+esc(fmt(hero.stack))+'</span>';
 }
 
 function renderTable(){
   var s=current(), st=s.engine, wrap=$('tableWrap');
   if(!wrap) return;
   var seated=st.players.filter(function(p){ return !p.out; });
-  // After a bust at hand end, out is set on next startHand. During done phase of a bust hand, they're still inHand with stack 0 — keep them for the result, drop on next deal.
-  var n=seated.length || st.players.length;
-  var map=[]; // layout index -> player
-  // Keep original seat order, hero (0) at bottom: layout k corresponds to player (heroOffset+k)% among seated
   var heroPos=seated.findIndex(function(p){return p.i===0;});
   if(heroPos<0) heroPos=0;
   var order=seated.slice(heroPos).concat(seated.slice(0,heroPos));
-  n=order.length;
-  var html='', k, p;
+  var n=order.length;
   var showAll=(st.phase==='done'&&st.result&&st.result.type==='showdown')||!!st.chatRevealed;
   var winners=(st.result&&st.result.winnings)||{};
   var agg=W.lastAggressor(st);
   var aggName=agg&&agg.name;
+  var seatHtml=[], k, p;
   for(k=0;k<n;k++){
     p=order[k];
-    var pos=seatPos(k,n,wrap);
     var isHero=p.i===0;
-    var isAgg=aggName && p.name===aggName && st.phase==='betting';
-    var isWin=!!winners[p.i];
-    var cls='seat'+(isHero?' hero':'')+(p.out?' out':'')+(p.inHand&&p.folded?' folded':'')+(st.phase==='betting'&&st.toAct===p.i?' active':'')+(isAgg?' aggressor':'')+(isWin&&st.phase==='done'?' winner':'');
+    var isAgg=!!(aggName && p.name===aggName && st.phase==='betting');
+    var isWin=!!winners[p.i] && st.phase==='done';
+    var cls='seat'+(isHero?' hero':'')+(p.inHand&&p.folded?' folded':'')+(st.phase==='betting'&&st.toAct===p.i?' active':'')+(isAgg?' aggressor':'')+(isWin?' winner':'');
     var stk=p.stack, sc=stk>E.BUYIN?'up':stk<E.BUYIN?'down':'';
-    var inner='';
     var faceUp=p.inHand&&!p.folded&&p.hole&&p.hole.length===2&&(p.shown||showAll||(st.runout&&st.phase!=='done')||(st.phase==='done'&&st.result&&st.result.type==='showdown'));
     var made='';
     if(faceUp){
       if(st.result&&st.result.hands&&st.result.hands[p.i]&&st.result.hands[p.i].name) made=st.result.hands[p.i].name;
       else if(st.board&&st.board.length>=3) made=S.heroHandName(p.hole, st.board);
     }
-    if(isWin&&st.result) made=(made?made+' · ':'')+'Wins '+fmt(winners[p.i]);
+    var seatLab=posLabel(st,p.i);
+    var inner='';
+    var tag='';
     if(isHero){
       var hc='';
-      if(p.inHand&&p.hole.length){ hc=p.hole.map(function(c){return cardHTML(c,(p.folded?' dim':'')+(isWin?' win':''));}).join(''); }
-      var hn=made || (p.inHand&&p.hole.length? S.heroHandName(p.hole, st.board) : '');
-      inner+='<div class="hero-hand">'+esc(hn)+'</div><div class="hero-cards">'+hc+'</div>';
-    } else if(p.inHand&&!p.folded){
-      if(faceUp){
-        inner+='<div class="shown">'+p.hole.map(function(c){return cardHTML(c,(isWin?'win':''));}).join('')+'</div>';
-        if(made) inner+='<div class="shown-hand'+(isWin?' win':'')+'">'+esc(made)+'</div>';
-      } else inner+='<div class="mini">'+cardHTML(null,'')+cardHTML(null,'')+'</div>';
+      if(p.inHand&&p.hole&&p.hole.length) hc=p.hole.map(function(c){return cardHTML(c,(p.folded?' dim':'')+(isWin?' win':''));}).join('');
+      var hn=made || (p.inHand&&p.hole&&p.hole.length? S.heroHandName(p.hole, st.board) : '');
+      if(p.inHand&&p.folded) hn='Folded';
+      inner+='<div class="hole hero-cards">'+hc+'</div>'+
+        '<div class="plate"><div class="hero-hand" title="'+esc(hn)+'">'+esc(shortHand(hn))+'</div><div class="nm">'+esc(p.name)+'</div>'+
+        '<div class="meta"><span class="pos'+(p.i===st.button?' btn':'')+'">'+esc(seatLab)+'</span><span class="stk '+sc+'">'+fmt(p.stack)+'</span></div></div>';
+      if(isWin) tag='<div class="tag win">Wins '+esc(fmt(winners[p.i]))+'</div>';
+    } else {
+      if(p.inHand&&!p.folded){
+        if(faceUp) inner+='<div class="hole shown">'+p.hole.map(function(c){return cardHTML(c,(isWin?'win':''));}).join('')+'</div>';
+        else inner+='<div class="hole mini">'+cardHTML(null,'')+cardHTML(null,'')+'</div>';
+      } else inner+='<div class="hole empty"></div>';
+      inner+='<div class="plate"><div class="pos'+(p.i===st.button?' btn':'')+'">'+esc(seatLab)+'</div><div class="nm" title="'+esc(p.name)+'">'+esc(shortName(p.name))+'</div>'+
+        '<div class="stk '+sc+'">'+fmt(p.stack)+'</div></div>';
+      if(st.phase==='done'){
+        if(isWin) tag='<div class="tag win" title="'+esc(made)+'">Wins '+esc(fmt(winners[p.i]))+'</div>';
+        else if(made) tag='<div class="tag hand" title="'+esc(made)+'">'+esc(shortHand(made))+'</div>';
+      } else if(p.inHand&&!p.folded){
+        var v=actionVerb(p.last);
+        if(v) tag='<div class="tag'+(isAgg?' agg':'')+(v==='All-in'?' allin':'')+'">'+esc(v)+'</div>';
+      }
     }
-    var tag='';
-    if(isAgg) tag='<div class="tag agg">'+esc(agg.label)+'</div>';
-    else if(p.last && p.inHand && st.phase!=='done') tag='<div class="tag'+(p.folded?' fold':'')+'">'+esc(p.last)+'</div>';
-    var seatLab=posLabel(st,p.i);
-    inner+='<div class="plate"><div class="pos">'+esc(seatLab)+'</div><div class="nm">'+esc(p.name)+'</div><div class="stk '+sc+'">'+fmt(p.stack)+'</div></div>'+tag;
-    html+='<div class="'+cls+'" style="left:'+pos.x+'%;top:'+pos.y+'%">'+inner+'</div>';
-    // chips for current bet
-    if(p.bet>0 && st.phase!=='done'){
-      var cx=50+(pos.x-50)*0.62, cy=50+(pos.y-50)*0.62;
-      html+='<div class="chip'+(isAgg?' agg-amt':'')+'" style="left:'+cx+'%;top:'+cy+'%"><i></i> '+fmt(p.bet)+'</div>';
-    }
-    // dealer / blinds
-    var lab=posLabel(st,p.i);
-    var bx=50+(pos.x-50)*0.72, by=50+(pos.y-50)*0.72;
-    if(p.i===st.button) html+='<div class="dbtn" style="left:'+bx+'%;top:'+by+'%">D</div>';
-    else if(p.i===st.sb && n>2) html+='<div class="blind" style="left:'+bx+'%;top:'+by+'%">SB</div>';
-    else if(p.i===st.bb) html+='<div class="blind bb" style="left:'+(bx+1)+'%;top:'+by+'%">BB</div>';
+    seatHtml.push('<div class="'+cls+'" data-k="'+k+'">'+inner+tag+'</div>');
   }
   // Remove previous seats/chips (keep felt, pot, board, logo)
   Array.from(wrap.querySelectorAll('.seat,.chip,.dbtn,.blind')).forEach(function(el){el.remove();});
-  wrap.insertAdjacentHTML('beforeend', html);
+  if(!layoutTable.retry) wrap.classList.remove('tight');
+  wrap.insertAdjacentHTML('beforeend', seatHtml.join(''));
 
   var pot=st.phase==='done'?((st.result&&st.result.pot)||0):E.potTotal(st);
   renderHeroBar(st, order);
@@ -1835,22 +1938,105 @@ function renderTable(){
     else bhtml+='<div class="slot"></div>';
   }
   $('board').innerHTML=bhtml;
+  layoutTable(st, order);
+}
+
+/* Measure the rendered seats and place seats, pot, board, bet chips and the dealer
+   disc in pixels so nothing overlaps or leaves the table area. */
+function layoutTable(st, order){
+  var wrap=$('tableWrap'); if(!wrap) return;
+  var aggInfo=W.lastAggressor(st);
+  var TW=wrap.clientWidth, TH=wrap.clientHeight;
+  if(!TW||!TH) return;
+  var seats=Array.from(wrap.querySelectorAll('.seat'));
+  var n=order.length;
+  var sizes=seats.map(function(el){ return {w:el.offsetWidth, h:el.offsetHeight}; });
+  var heroEl=seats[0];
+  var heroInTable=!!heroEl && getComputedStyle(heroEl).display!=='none';
+  var heroSize=heroInTable?sizes[0]:{w:0,h:0};
+  var centers=seatCenters(n, TW, TH, sizes, heroSize, heroInTable);
+  // Fit Max's plate between the two bottom seats before resorting to lifting them.
+  if(heroInTable && n>1){
+    var hb=rectOf(centers[0].x, centers[0].y, heroSize.w, heroSize.h), lim=TW;
+    for(var z=1;z<n;z++){
+      var zr=rectOf(centers[z].x, centers[z].y, sizes[z].w, sizes[z].h);
+      if(zr.b>hb.t+4 && zr.t<hb.b){ lim=Math.min(lim, 2*Math.min(Math.abs(zr.l-TW/2), Math.abs(zr.r-TW/2))-12); }
+    }
+    if(heroSize.w>lim){
+      var hp=heroEl.querySelector('.plate');
+      if(hp){ hp.style.maxWidth=Math.max(70, hp.offsetWidth-(heroSize.w-lim))+'px'; sizes[0]={w:heroEl.offsetWidth,h:heroEl.offsetHeight}; heroSize=sizes[0]; centers[0]={x:TW/2, y:TH-3-heroSize.h/2}; }
+    }
+  }
+  // Max's seat sits bottom centre; lift any bottom seat that would touch it.
+  if(heroInTable && n>1){
+    var hr=rectOf(centers[0].x, centers[0].y, heroSize.w, heroSize.h);
+    for(var q=1;q<n;q++){
+      var qr=rectOf(centers[q].x, centers[q].y, sizes[q].w, sizes[q].h);
+      if(hits(qr,hr,4)) centers[q]={x:centers[q].x, y:Math.max(sizes[q].h/2+2, hr.t-6-sizes[q].h/2)};
+    }
+  }
+  // Very short table (small phone with the log open): switch to compact seats once.
+  if(!wrap.classList.contains('tight') && !layoutTable.retry){
+    var need=false;
+    for(var a1=0;a1<n && !need;a1++) for(var a2=a1+1;a2<n;a2++){
+      if(hits(rectOf(centers[a1].x,centers[a1].y,sizes[a1].w,sizes[a1].h), rectOf(centers[a2].x,centers[a2].y,sizes[a2].w,sizes[a2].h), 0)){ need=true; break; }
+    }
+    if(need){ wrap.classList.add('tight'); layoutTable.retry=true; try{ renderTable(); } finally { layoutTable.retry=false; } return; }
+  }
+  var obstacles=[], seatRects=[];
+  seats.forEach(function(el,k){
+    var c=centers[k], w=sizes[k].w, h=sizes[k].h;
+    var x=Math.round(Math.min(Math.max(c.x, w/2+2), TW-w/2-2)), y=Math.round(Math.min(Math.max(c.y, h/2+2), TH-h/2-2));
+    el.style.left=(x-w/2)+'px'; el.style.top=(y-h/2)+'px';
+    var r=rectOf(x,y,w,h); seatRects[k]=r;
+    if(k>0||heroInTable) obstacles.push(r);
+  });
+  // Centre column: between the top seats and the bottom seats.
+  var topBottom=0, botTop=TH;
+  seatRects.forEach(function(r,k){
+    if(k===0 && !heroInTable) return;
+    if(r.t<TH*0.25) topBottom=Math.max(topBottom,r.b);
+    if(r.b>TH*0.75) botTop=Math.min(botTop,r.t);
+  });
+  var boardEl=$('board'), potEl=$('potBox');
+  var bw=boardEl.offsetWidth, bh=boardEl.offsetHeight, pw=potEl.offsetWidth, ph=potEl.offsetHeight;
+  var free=botTop-topBottom;
+  var cy=topBottom+free*0.44;
+  var by=Math.round(cy), py=Math.round(by+bh/2+6+ph/2);
+  boardEl.style.left=(TW/2)+'px'; boardEl.style.top=by+'px';
+  potEl.style.left=(TW/2)+'px'; potEl.style.top=py+'px';
+  var boardR=rectOf(TW/2,by,bw,bh), potR=rectOf(TW/2,py,pw,ph);
+  obstacles.push(boardR, potR);
+  var logo=$('feltLogo'); if(logo){ logo.style.top=Math.round(Math.min(botTop-10, py+ph/2+16))+'px'; }
+  var html='', places=[];
+  // Bet chips first, then the dealer disc.
+  order.forEach(function(p,k){
+    if(!(p.bet>0 && st.phase!=='done')) return;
+    var isAgg=false, agg=aggInfo; if(agg&&agg.name===p.name&&st.phase==='betting') isAgg=true;
+    places.push({kind:'chip', k:k, html:'<div class="chip'+(isAgg?' agg-amt':'')+'" data-k="'+k+'"><i></i>'+fmt(p.bet)+'</div>'});
+  });
+  order.forEach(function(p,k){ if(p.i===st.button) places.push({kind:'dbtn', k:k, html:'<div class="dbtn" title="Dealer button">D</div>'}); });
+  if(!places.length) return;
+  // Render once to measure each item.
+  var tmp=document.createElement('div');
+  tmp.innerHTML=places.map(function(x){return x.html;}).join('');
+  var els=Array.from(tmp.children);
+  els.forEach(function(el){ el.style.visibility='hidden'; el.style.left='0px'; el.style.top='0px'; wrap.appendChild(el); });
+  var potCx=TW/2, potCy=by;
+  els.forEach(function(el,idx){
+    var it=places[idx], w=el.offsetWidth, h=el.offsetHeight;
+    var sr=seatRects[it.k];
+    if(it.k===0 && !heroInTable) sr=rectOf(TW/2, TH+2, 2, 2);
+    var spot=placeNear(sr, potCx, potCy, w, h, obstacles, TW, TH, seatRects.map(function(r,k){ return (k===0&&!heroInTable)?rectOf(TW/2,TH+2,2,2):r; }), it.k);
+    el.style.left=Math.round(spot.x)+'px'; el.style.top=Math.round(spot.y)+'px';
+    el.style.visibility='';
+    obstacles.push(spot.r);
+  });
 }
 
 function renderHeroBar(st, order){
   var bar=$('heroBar'); if(!bar) return;
-  var p=st.players[0];
-  var winners=(st.result&&st.result.winnings)||{}, isWin=!!winners[0]&&st.phase==='done';
-  var hc=(p.inHand&&p.hole&&p.hole.length)?p.hole.map(function(c){return cardHTML(c,(p.folded?' dim':'')+(isWin?' win':''));}).join(''):'';
-  var made='';
-  if(p.inHand&&p.hole&&p.hole.length){
-    if(st.result&&st.result.hands&&st.result.hands[0]&&st.result.hands[0].name) made=st.result.hands[0].name;
-    else made=S.heroHandName(p.hole, st.board);
-  }
-  if(isWin) made=(made?made+' · ':'')+'Wins '+fmt(winners[0]);
-  if(p.inHand&&p.folded) made='Folded';
-  bar.innerHTML='<div class="hb-cards">'+hc+'</div><div class="hb-txt"><div class="hb-hand">'+esc(made)+'</div>'+
-    '<div class="hb-me">'+esc(posLabel(st,0))+' · '+esc(p.name)+' · '+fmt(p.stack)+'</div></div>';
+  bar.innerHTML='';
 }
 
 function renderLog(){
@@ -1889,8 +2075,9 @@ function setLogOpen(on){
   if(pane) pane.classList.toggle('open', logOpen);
   if(body) body.classList.toggle('log-open', logOpen);
   if(main) main.classList.toggle('log-open', logOpen);
-  if($('btnLog')) $('btnLog').textContent=logOpen?'Hide log':'Hand log';
+  if($('btnLog')) $('btnLog').innerHTML=logOpen?'Hide<span class="wide"> log</span>':'<span class="wide">Hand </span>Log';
   if(logOpen){ renderLog(); scrollLogToEnd(); }
+  if(current()) renderTable();
 }
 
 function handResultText(s){
