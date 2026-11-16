@@ -170,6 +170,11 @@ input,textarea,select{font-size:16px}
 #board{left:50%;top:45%;gap:4px}
 #potBox{top:62%;font-size:15px;padding:3px 12px;border-radius:14px;background:rgba(0,0,0,.5)}
 #potBox small{font-size:13px;margin-left:2px;text-transform:capitalize}
+/* Hand result banner (replaces the pot pill when the hand is over) */
+#potBox.result{white-space:normal;text-align:center;font-size:15px;line-height:1.3;padding:6px 12px;border-radius:12px;
+  background:rgba(8,16,11,.86);border:1.5px solid var(--gold);color:#fff3c4;box-shadow:0 2px 10px rgba(0,0,0,.45);width:max-content}
+#potBox.result .rl+.rl{margin-top:3px;padding-top:3px;border-top:1px solid rgba(245,197,66,.25)}
+#potBox.result.noshow{border-color:#4b5d52;color:var(--txt);font-weight:600}
 .seat{position:absolute;left:0;top:0;width:var(--sw);display:flex;flex-direction:column;align-items:center;z-index:4;transition:opacity .25s,filter .25s}
 .seat .hole{position:relative;z-index:1;display:flex;justify-content:center;gap:2px;height:26px;margin-bottom:-6px}
 .seat .hole.mini .card{--cw:19px}
@@ -1094,7 +1099,94 @@ function actionFrom(input, st){
   return {type:input.type};
 }
 
-var api={widget:widget, lastAggressor:lastAggressor, shorterCovered:shorterCovered, parseCustom:parseCustom, actionFrom:actionFrom, money:money};
+
+/* ---- Plain-words showdown results (display only; the hand-history lines keep the engine's wording). ----
+   describeHand(score, rivals): "a Flush, Ace high", "Two Pair, Kings and Sevens, Ace kicker", ...
+   Kickers / extra ranks are named only when they decided the pot against a shown rival hand. */
+var RN1=['Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Jack','Queen','King','Ace'];
+var RNS=['Twos','Threes','Fours','Fives','Sixes','Sevens','Eights','Nines','Tens','Jacks','Queens','Kings','Aces'];
+// how many leading rank slots make up the hand itself (the rest are kickers)
+var MAIN=[5,1,2,1,1,5,2,1,1];
+function decideIdx(score, rivals){
+  // first rank slot where this hand beats the best same-category rival that it does not tie; -1 if none
+  var d=E.decode(score), at=-1;
+  (rivals||[]).forEach(function(r){
+    if(r==null||r===score) return;
+    var o=E.decode(r); if(o.cat!==d.cat||r>score) return;
+    for(var i=0;i<5;i++){ if(d.ks[i]!==o.ks[i]){ if(i>at) at=i; break; } }
+  });
+  return at;
+}
+function describeHand(score, rivals){
+  var d=E.decode(score), k=d.ks, at=decideIdx(score, rivals);
+  var kick=function(n){ // name the kicker that decided it (slot `at`), if a kicker did
+    return at<n?'':', '+RN1[k[at]]+' kicker';
+  };
+  var highRun=function(){ // Flush / high card: Ace high, or Ace-King high when the second card decided it
+    var n=Math.max(0,at); var r=[]; for(var i=0;i<=n;i++) r.push(RN1[k[i]]); return r.join('-')+' high';
+  };
+  switch(d.cat){
+    case 8: return k[0]===12?'a Royal Flush':'a Straight Flush, '+RN1[k[0]]+' high';
+    case 7: return 'Four of a Kind, '+RNS[k[0]]+kick(1);
+    case 6: return 'a Full House, '+RNS[k[0]]+' full of '+RNS[k[1]];
+    case 5: return 'a Flush, '+highRun();
+    case 4: return 'a Straight, '+RN1[k[0]]+' high';
+    case 3: return 'Three of a Kind, '+RNS[k[0]]+kick(1);
+    case 2: return 'Two Pair, '+RNS[k[0]]+' and '+RNS[k[1]]+kick(2);
+    case 1: return 'a Pair of '+RNS[k[0]]+kick(1);
+    default: return highRun();
+  }
+}
+// Fallback when only the engine's name is known (e.g. older saved states): "Flush, Ace-high" -> "a Flush, Ace high"
+function phraseFromName(n){
+  n=String(n||'').replace(/-high/g,' high');
+  if(/^(Royal Flush|Straight Flush|Flush|Straight|Full House|Pair of)/.test(n)) n='a '+n;
+  return n||'the best hand';
+}
+function handWords(h, rivals){ return (h&&typeof h.score==='number')?describeHand(h.score, rivals):phraseFromName(h&&h.name); }
+function joinNames(ns){ return ns.length<=1?(ns[0]||''):ns.slice(0,-1).join(', ')+' and '+ns[ns.length-1]; }
+/* describeResult(st) -> {shown:bool, lines:[...], text}
+   Showdown / all-in runout: every pot names its winner(s) and the winning hand.
+   No showdown: "Jack wins $0.70, no showdown" (or the hand, if the winner chose to show). */
+function describeResult(st){
+  var res=st&&st.result; if(!res) return {shown:false, lines:[], text:''};
+  var P=st.players, hands=res.hands||{}, lines=[];
+  var nm=function(i){ return P[i].name; };
+  if(res.type!=='showdown'){
+    var wi=res.winners&&res.winners[0], w=wi!=null?P[wi]:null;
+    if(!w) return {shown:false, lines:[], text:''};
+    var amt=E.fmt(res.pot||0);
+    if(hands[wi]&&(hands[wi].score!=null||hands[wi].name)){
+      var t=w.name+' wins '+amt+' and shows '+handWords(hands[wi],[]);
+      return {shown:true, lines:[t], text:t};
+    }
+    var t2=w.name+' wins '+amt+', no showdown';
+    return {shown:false, lines:[t2], text:t2};
+  }
+  var pots=res.pots||[];
+  var allW=[]; pots.forEach(function(pt){ (pt.winners||[]).forEach(function(i){ if(allW.indexOf(i)<0) allW.push(i); }); });
+  var rivalsOf=function(pt){ return (pt.eligible||Object.keys(hands).map(Number)).filter(function(i){ return (pt.winners||[]).indexOf(i)<0 && hands[i] && typeof hands[i].score==='number'; }).map(function(i){ return hands[i].score; }); };
+  if(allW.length===1 && pots.every(function(pt){ return pt.winners&&pt.winners.length===1; })){
+    // one player took everything: one line with the total
+    var wi1=allW[0], riv=[]; pots.forEach(function(pt){ riv=riv.concat(rivalsOf(pt)); });
+    lines.push(nm(wi1)+' wins '+E.fmt((res.winnings&&res.winnings[wi1])||res.pot||0)+' with '+handWords(hands[wi1], riv));
+  } else {
+    pots.forEach(function(pt){
+      var ws=pt.winners||[]; if(!ws.length) return;
+      var lab='';
+      if(pots.length>1){
+        lab=String(pt.label||'pot').toLowerCase();
+        lab=(lab==='side pot 1'&&pots.length===2)?' the side pot':(/^main/.test(lab)?' the main pot':' '+lab);
+      }
+      var hand=handWords(hands[ws[0]], rivalsOf(pt));
+      if(ws.length>1) lines.push(joinNames(ws.map(nm))+' split'+(lab||'')+' '+E.fmt(pt.amount)+' with '+hand);
+      else lines.push(nm(ws[0])+' wins'+(lab||'')+' '+E.fmt(pt.amount)+' with '+hand);
+    });
+  }
+  return {shown:true, lines:lines, text:lines.join('. ')};
+}
+
+var api={phraseFromName:phraseFromName, describeHand:describeHand, describeResult:describeResult, widget:widget, lastAggressor:lastAggressor, shorterCovered:shorterCovered, parseCustom:parseCustom, actionFrom:actionFrom, money:money};
 if(typeof module!=='undefined'&&module.exports) module.exports=api;
 else { root.GdrWidget=api; }
 if(typeof window!=='undefined') window.GdrWidget=api;
@@ -1990,7 +2082,7 @@ function renderTable(){
       inner+='<div class="plate"><div class="pos'+(p.i===st.button?' btn':'')+'">'+esc(seatLab)+'</div><div class="nm" title="'+esc(p.name)+'">'+esc(shortName(p.name))+'</div>'+
         '<div class="stk '+sc+'">'+fmt(p.stack)+'</div></div>';
       if(st.phase==='done'){
-        if(isWin) tag='<div class="tag win" title="'+esc(made)+'">Wins '+esc(fmt(winners[p.i]))+'</div>';
+        if(isWin) tag='<div class="tag win" title="'+esc(made)+'" data-short="+'+esc(fmt(winners[p.i]))+'">Wins '+esc(fmt(winners[p.i]))+'</div>';
         else if(made) tag='<div class="tag hand" title="'+esc(made)+'">'+esc(shortHand(made))+'</div>';
       } else if(p.inHand&&!p.folded){
         var v=actionVerb(p.last);
@@ -2003,10 +2095,20 @@ function renderTable(){
   Array.from(wrap.querySelectorAll('.seat,.chip,.dbtn,.blind')).forEach(function(el){el.remove();});
   if(!layoutTable.retry) wrap.classList.remove('tight');
   wrap.insertAdjacentHTML('beforeend', seatHtml.join(''));
+  // Narrow seats: "Wins $3.00" would be cut to "Wins $3..."; show "+$3.00" instead (the banner names the winner).
+  Array.from(wrap.querySelectorAll('.seat .tag.win[data-short]')).forEach(function(t){ if(t.scrollWidth>t.clientWidth+1) t.textContent=t.getAttribute('data-short'); });
 
   var pot=st.phase==='done'?((st.result&&st.result.pot)||0):E.potTotal(st);
   renderHeroBar(st, order);
-  $('potBox').innerHTML='Pot '+fmt(pot)+(st.street?' <small>'+esc(st.street)+'</small>':'');
+  var rd=(st.phase==='done')?W.describeResult(st):null;
+  if(rd&&rd.lines.length){
+    // Hand over: the pot spot becomes the result banner, naming the winner(s) and the winning hand.
+    $('potBox').classList.add('result'); $('potBox').classList.toggle('noshow', !rd.shown);
+    $('potBox').innerHTML=rd.lines.map(function(t){ return '<div class="rl">'+esc(t)+'</div>'; }).join('');
+  } else {
+    $('potBox').classList.remove('result','noshow');
+    $('potBox').innerHTML='Pot '+fmt(pot)+(st.street?' <small>'+esc(st.street)+'</small>':'');
+  }
   var bhtml='';
   for(var i=0;i<5;i++){
     if(i<st.board.length) bhtml+=cardHTML(st.board[i],'');
@@ -2074,9 +2176,28 @@ function layoutTable(st, order){
     if(r.b>TH*0.75) botTop=Math.min(botTop,r.t);
   });
   var boardEl=$('board'), potEl=$('potBox');
-  var bw=boardEl.offsetWidth, bh=boardEl.offsetHeight, pw=potEl.offsetWidth, ph=potEl.offsetHeight;
+  var bw=boardEl.offsetWidth, bh=boardEl.offsetHeight;
   var free=botTop-topBottom;
   var cy=topBottom+free*0.44;
+  var isResult=potEl.classList.contains('result');
+  if(isResult){
+    // Result banner: as wide as the gap between the side seats beside it, wrapping to more lines if needed.
+    var bandT=cy+bh/2, bandB=Math.min(botTop, bandT+130), leftLim=0, rightLim=TW;
+    seatRects.forEach(function(r,k){
+      if(!r || (k===0&&!heroInTable)) return;
+      if(r.b<bandT || r.t>bandB) return;
+      var mx=(r.l+r.r)/2;
+      if(mx<TW/2) leftLim=Math.max(leftLim,r.r); else rightLim=Math.min(rightLim,r.l);
+    });
+    var half=Math.min(TW/2-leftLim, rightLim-TW/2)-8;
+    potEl.style.maxWidth=Math.max(150, Math.min(2*half, TW>700?520:360, TW-16))+'px';
+  } else potEl.style.maxWidth='';
+  var pw=potEl.offsetWidth, ph=potEl.offsetHeight;
+  if(isResult){
+    // keep board + banner inside the free band between top and bottom seats
+    var block=bh+6+ph;
+    if(cy-bh/2+block>botTop-6) cy=Math.max(topBottom+bh/2+4, botTop-6-block+bh/2);
+  }
   var by=Math.round(cy), py=Math.round(by+bh/2+6+ph/2);
   boardEl.style.left=(TW/2)+'px'; boardEl.style.top=by+'px';
   potEl.style.left=(TW/2)+'px'; potEl.style.top=py+'px';
@@ -2176,6 +2297,9 @@ function setLogOpen(on){
 function handResultText(s){
   var st=s.engine, res=st.result;
   if(!res) return 'Hand '+st.handNo+' complete.';
+  var rd=W.describeResult(st);
+  // The winner and hand are on the table banner; the line under the table stays short.
+  if(rd.text) return 'Hand '+st.handNo+' of '+s.handLimit+' complete.';
   var pot=fmt(res.pot||0);
   if(res.type==='fold'||res.type==='award'){
     var wi=(res.winners&&res.winners[0]);
