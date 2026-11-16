@@ -241,6 +241,10 @@ input,textarea,select{font-size:16px}
 #controls{gap:6px;padding:6px 8px 8px}
 .err{min-height:0}
 .err:empty{display:none}
+/* Errors float over the prompt line instead of adding a row, so the table never re-flows or gets cut off */
+#controls{position:relative}
+#controls>.err{position:absolute;left:0;right:0;bottom:100%;z-index:5;font-size:13px;line-height:1.3;padding:5px 10px;
+  background:#1d0f0f;border:1px solid #6b2a2a;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .abtn{font-size:15px}
 .abtn.nexthand{font-size:18px}
 
@@ -420,7 +424,7 @@ input,textarea,select{font-size:16px}
       <div id="controls">
         <div id="acts"></div>
         <div class="custom">
-          <input id="customAmt" placeholder="$ amount (raise-to / bet total)" inputmode="decimal" autocomplete="off">
+          <input id="customAmt" type="text" placeholder="$0.00 raise-to / bet total" inputmode="numeric" pattern="[0-9]*" enterkeyhint="go" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Custom amount in dollars; digits fill from the cents">
           <button type="button" id="customGo">Go</button>
         </div>
         <div class="err" id="err"></div>
@@ -1741,11 +1745,11 @@ function placeNear(seatR, cx, cy, w, h, obstacles, W, H, seatRects, own){
       if(!free) continue;
       var dOwn=rectDist(x,y,seatR);
       var mine=true;
-      for(q=0;q<seatRects.length;q++){ if(q!==own && seatRects[q] && rectDist(x,y,seatRects[q])<dOwn+6){ mine=false; break; } }
+      for(q=0;q<seatRects.length;q++){ if(q!==own && seatRects[q] && rectDist(x,y,seatRects[q])<dOwn+2){ mine=false; break; } }
       if(!mine) continue;
       var vx=x-sx, vy=y-sy, along=vx*dx+vy*dy, lat=Math.abs(-vx*dy+vy*dx);
       var score=dOwn+0.45*lat+(along<0?200:0);
-      if(score<bs){ bs=score; best={x:x,y:y,r:r}; }
+      if(score<bs){ bs=score; best={x:x,y:y,r:r,owned:true,score:score}; }
     }
   }
   if(!best){
@@ -1755,12 +1759,15 @@ function placeNear(seatR, cx, cy, w, h, obstacles, W, H, seatRects, own){
         var r2=rectOf(x,y,w,h), ok2=true;
         for(q=0;q<obstacles.length;q++){ if(hits(r2,obstacles[q],2)){ ok2=false; break; } }
         if(!ok2) continue;
-        var sc=rectDist(x,y,seatR);
-        if(sc<bs){ bs=sc; best={x:x,y:y,r:r2}; }
+        // Prefer spots that still read as this seat's chip: penalise being nearer another seat.
+        var dO=rectDist(x,y,seatR), worst=0;
+        for(q=0;q<seatRects.length;q++){ if(q!==own && seatRects[q]){ var lead=dO-rectDist(x,y,seatRects[q]); if(lead>worst) worst=lead; } }
+        var sc=dO+4*worst+(worst>0?40:0);
+        if(sc<bs){ bs=sc; best={x:x,y:y,r:r2,owned:worst<=0,score:sc+500}; }
       }
     }
   }
-  if(!best){ var x0=sx+dx*40, y0=sy+dy*40; best={x:x0,y:y0,r:rectOf(x0,y0,w,h)}; }
+  if(!best){ var x0=sx+dx*40, y0=sy+dy*40; best={x:x0,y:y0,r:rectOf(x0,y0,w,h),owned:false,score:5000}; }
   return best;
 }
 
@@ -2091,14 +2098,32 @@ function layoutTable(st, order){
   var els=Array.from(tmp.children);
   els.forEach(function(el){ el.style.visibility='hidden'; el.style.left='0px'; el.style.top='0px'; wrap.appendChild(el); });
   var potCx=TW/2, potCy=by;
+  var sRects=seatRects.map(function(r,k){ return (k===0&&!heroInTable)?rectOf(TW/2,TH+2,2,2):r; });
+  var sizes=els.map(function(el){ return {w:el.offsetWidth, h:el.offsetHeight}; });
+  // Greedy placement in a given order; on a crowded table, retry with the chips that could not find
+  // a spot of their own placed first, and keep the arrangement where the most chips read as their seat's.
+  function arrange(ordIdx){
+    var obs=obstacles.slice(), spots=[], miss=[], total=0;
+    ordIdx.forEach(function(idx){
+      var it=places[idx], sz=sizes[idx];
+      var spot=placeNear(sRects[it.k], potCx, potCy, sz.w, sz.h, obs, TW, TH, sRects, it.k);
+      spots[idx]=spot; obs.push(spot.r); total+=spot.score||0;
+      if(!spot.owned) miss.push(idx);
+    });
+    return {spots:spots, miss:miss, total:total};
+  }
+  var base=places.map(function(_,i){ return i; });
+  var best=arrange(base), tries=0;
+  while(best.miss.length && tries<4){
+    tries++;
+    var first=best.miss.slice(), rest=base.filter(function(i){ return first.indexOf(i)<0; });
+    var alt=arrange(tries%2? first.concat(rest) : first.concat(rest.reverse()));
+    if(alt.miss.length<best.miss.length || (alt.miss.length===best.miss.length && alt.total<best.total)) best=alt; else if(tries>=2) break;
+  }
   els.forEach(function(el,idx){
-    var it=places[idx], w=el.offsetWidth, h=el.offsetHeight;
-    var sr=seatRects[it.k];
-    if(it.k===0 && !heroInTable) sr=rectOf(TW/2, TH+2, 2, 2);
-    var spot=placeNear(sr, potCx, potCy, w, h, obstacles, TW, TH, seatRects.map(function(r,k){ return (k===0&&!heroInTable)?rectOf(TW/2,TH+2,2,2):r; }), it.k);
+    var spot=best.spots[idx];
     el.style.left=Math.round(spot.x)+'px'; el.style.top=Math.round(spot.y)+'px';
     el.style.visibility='';
-    obstacles.push(spot.r);
   });
 }
 
@@ -2243,6 +2268,7 @@ function takeAction(act, fromCustom){
       input=S.parseAction(act);
     }
     var res=S.stepGdr(s, input, s.rng||S.defaultRng());
+    if($('customAmt')) $('customAmt').value='';
     sessionResult=res;
     lastPublic=res.public;
     save();
@@ -2253,9 +2279,54 @@ function takeAction(act, fromCustom){
   }
 }
 
+// Banking-app style amount entry: digits fill from the right in cents (1 -> $0.01, 125 -> $1.25,
+// 2500 -> $25.00); backspace drops the last digit; '.' and other characters are ignored.
+var CUSTOM_MAX_DIGITS=7; // up to $99,999.99
+function centsDigits(text){
+  var d=String(text==null?'':text).replace(/[^0-9]/g,'').replace(/^0+/,'');
+  return d.slice(0,CUSTOM_MAX_DIGITS);
+}
+function formatCentsDigits(d){
+  if(!d) return '';
+  var c=parseInt(d,10);
+  var dollars=Math.floor(c/100), cents=c%100;
+  return '$'+String(dollars).replace(/\B(?=(\d{3})+(?!\d))/g,',')+'.'+(cents<10?'0':'')+cents;
+}
+function caretToEnd(el){ try{ var n=el.value.length; el.setSelectionRange(n,n); }catch(e){} }
+function setCustomDigits(el, d){ el.value=formatCentsDigits(d); caretToEnd(el); if($('err')&&$('err').textContent) $('err').textContent=''; }
+function bindCustomEntry(el){
+  if(!el) return;
+  el.addEventListener('beforeinput', function(ev){
+    var t=ev.inputType||'', d=centsDigits(el.value);
+    var whole=el.value && el.selectionStart===0 && el.selectionEnd===el.value.length;
+    if(t==='insertText'||t==='insertReplacementText'||t==='insertCompositionText'){
+      ev.preventDefault();
+      var add=String(ev.data||'').replace(/[^0-9]/g,'');
+      if(whole) d='';
+      setCustomDigits(el, centsDigits(d+add));
+    } else if(t==='insertFromPaste'||t==='insertFromDrop'){
+      ev.preventDefault();
+      var txt=ev.data!=null?ev.data:(ev.dataTransfer&&ev.dataTransfer.getData('text'))||'';
+      // A pasted "1.2" / "$1.20" is dollars; plain digits fill from the cents.
+      var p=/[.]/.test(txt)&&Number.isFinite(Number(String(txt).replace(/[$,\s]/g,'')))?String(Math.round(Number(String(txt).replace(/[$,\s]/g,''))*100)):txt;
+      setCustomDigits(el, centsDigits((whole?'':d)+centsDigits(p)));
+    } else if(t.indexOf('delete')===0){
+      ev.preventDefault();
+      setCustomDigits(el, (whole||t==='deleteByCut'&&el.selectionStart!==el.selectionEnd)?'':d.slice(0,-1));
+    }
+  });
+  // Fallback for browsers without beforeinput (and autofill): rebuild from whatever digits are there.
+  el.addEventListener('input', function(){
+    if($('err')&&$('err').textContent) $('err').textContent='';
+    var f=formatCentsDigits(centsDigits(el.value));
+    if(el.value!==f) setCustomDigits(el, centsDigits(el.value));
+  });
+  ['focus','click'].forEach(function(evn){ el.addEventListener(evn, function(){ setTimeout(function(){ caretToEnd(el); },0); }); });
+}
+
 function submitCustom(){
   var v=$('customAmt').value;
-  if(!v||!String(v).trim()){ flashErr('Type a raise-to or bet total, for example 1.20'); return; }
+  if(!v||!String(v).trim()){ flashErr('Type a raise-to or bet total, for example 120 for $1.20'); return; }
   takeAction(v, true);
 }
 
@@ -2856,6 +2927,8 @@ window.GdrPlayerUi={
     var el=document.querySelector('.download-banner:not(.hidden)');
     return !!el;
   },
+  current:function(){ return current(); },
+  formatCents:function(t){ return formatCentsDigits(centsDigits(t)); },
   bannerText:function(){
     var el=document.querySelector('.download-banner:not(.hidden) .download-banner-msg');
     return el?el.textContent:'';
@@ -2917,6 +2990,7 @@ function bind(){
   });
   $('customGo').addEventListener('click', submitCustom);
   $('customAmt').addEventListener('keydown', function(ev){ if(ev.key==='Enter'){ ev.preventDefault(); submitCustom(); } });
+  bindCustomEntry($('customAmt'));
   $('btnHow').addEventListener('click', function(){
     $('how').classList.toggle('hidden');
   });
